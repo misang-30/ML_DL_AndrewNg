@@ -1,4 +1,4 @@
-# < Advie for applying machine learning >
+# < Advice for applying machine learning >
 
 ## 1. Intro
 ### 1). 머신러닝 개발 시 흔히 겪는 문제 상황
