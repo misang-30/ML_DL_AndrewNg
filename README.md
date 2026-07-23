@@ -1,3 +1,6 @@
+## 0.레퍼런스
+- https://www.deeplearning.ai/specializations/machine-learning?utm_campaign=mls-video-series&utm_medium=video&utm_source=youtube#course-slides
+
 ## 1.커리큘럼
 ### Course1  : Supervised Machine Learning: Regression and Classification
 Week 1: Introduction to Machine Learning (2시간)
@@ -18,5 +21,7 @@ Week 3: Reinforcement learning(2시간)
 
 ## 2. 순서
 - 1.강의를 듣고 개념 정리
-- 2.코드 Example 모아보며 코드 습득
+- 2.강의에서 제공하는 Lab 코드 실습
 - 3.키워드는 적어놓았으니 상세한 것들은 서칭해서 더 공부해라.
+
+
