@@ -112,6 +112,7 @@ $$J(w,b) = \frac{1}{2m} \sum_{i=1}^{m} \left( f_{w,b}(x^{(i)}) - y^{(i)} \right)
 - 가장 높은 정상에서 가장 낮은 골로 가는 형상인데, 가장 가파른 곳의 방향으로 정상에서 내려온다.
 > [!Notice]
 >아래 식을 동시 업데이트해야 한다.  L이 같아야 한다. 서로 다르게 하면 달라진다.
+> 
 >$$w \leftarrow w - \alpha \frac{\partial L}{\partial w}$$
 >$$b \leftarrow b - \alpha \frac{\partial L}{\partial b}$$
 
