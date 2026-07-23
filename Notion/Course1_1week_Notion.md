@@ -78,6 +78,14 @@ $$f_{w,b}(x) = wx + b$$
 ---
 ---
 ## 4. Cost Function
+- 비용함수는 작을 수록 좋다.
+- J(w) (b=0 가정)에서 값이 가장 작은 값에서의 w를 구해야 한다.
+- (J(w)는 w,b에 대한 그래프이다.)
+- Contour Plot을 이용하면 w,b에 대한 J(w)를 보여주기 쉽다
+- "경사하강법으로 w,b를 구한다."
+- 
+
+
 > **목적:** 우리가 정한 $w$와 $b$가 실제 데이터에 얼마나 잘 맞는지(정확히는 얼마나 틀렸는지)를 수치화하여 평가합니다.
 
 오차가 작을수록 좋은 모델이므로, 비용 함수의 값을 최소화하는 $w, b$를 구해야 합니다.
@@ -93,20 +101,11 @@ $$\text{Error}^{(i)} = f_{w,b}(x^{(i)}) - y^{(i)} = \hat{y}^{(i)} - y^{(i)}$$
 회귀 분석에서 가장 흔하게 쓰이는 비용 함수이며, 오차를 제곱하여 평균을 냅니다. 기호로는 $J(w,b)$라고 씁니다.
 
 $$J(w,b) = \frac{1}{2m} \sum_{i=1}^{m} \left( f_{w,b}(x^{(i)}) - y^{(i)} \right)^2$$
-
-
 ---
 ---
 ---
-## 5. Cost Function 
-- 비용함수는 작을 수록 좋다.
-- J(w) (b=0 가정)에서 값이 가장 작은 값에서의 w를 구해야 한다.
-- (J(w)는 w,b에 대한 그래프이다.)
-- Contour Plot을 이용하면 w,b에 대한 J(w)를 보여주기 쉽다
-- "경사하강법으로 w,b를 구한다."
-- 
 
-## 6. Train the model with GD
+## 5. Train the model with GD
 ### 1). GD
 - 초기값 w,b를 설정하고
 - J(w,b)를 감소시키는 방법으로 계속 w,b를 바꾼다.
@@ -140,6 +139,7 @@ $$J(w,b) = \frac{1}{2m} \sum_{i=1}^{m} \left( f_{w,b}(x^{(i)}) - y^{(i)} \right)
 
 ### 4). Linear Regression 에서 GD 적용
 - 아래가 공식이다. J(w)를 미분한 값을 넣어둔 것이다.
+- 가설 함수 f(x) = wx+b 대입해서 미분하면 쉽게 증명 가능.
 $$\begin{aligned} w &= w - \alpha \frac{1}{m} \sum_{i=1}^{m} \left( f_{w,b}(x^{(i)}) - y^{(i)} \right) x^{(i)} \\ b &= b - \alpha \frac{1}{m} \sum_{i=1}^{m} \left( f_{w,b}(x^{(i)}) - y^{(i)} \right) \end{aligned}$$
 
 ### 5). Running GD 
