@@ -109,9 +109,13 @@ $$g(z) = \frac{1}{1 + e^{-z}}$$
 시그모이드 함수 $g(z)$의 특성에 따라, $g(z) \ge 0.5$가 되는 조건은 **$z \ge 0$** 일 때입니다.
 즉, 분류 예측 기준을 $z$ 수식으로 직접 풀어 쓰면 다음과 같습니다.
 
-$$\mathbf{w} \cdot \mathbf{x} + b \ge 0 \implies \hat{y} = 1$$
+```math
+\mathbf{w} \cdot \mathbf{x} + b \ge 0 \implies \hat{y} = 1
+```
 
-$$\mathbf{w} \cdot \mathbf{x} + b < 0 \implies \hat{y} = 0$$
+```math
+\mathbf{w} \cdot \mathbf{x} + b < 0 \implies \hat{y} = 0
+```
 
 > **결론:** $y=1$과 $y=0$을 가르는 경계선은 바로 **$\mathbf{w} \cdot \mathbf{x} + b = 0$** 이 되는 지
 > 점입니다. 이를 **결정 경계(Decision Boundary)**라고 부릅니다.
@@ -169,8 +173,15 @@ $$\mathbf{w} \cdot \mathbf{x} + b < 0 \implies \hat{y} = 0$$
 경사 하강법을 적용했을 때 무조건 최저점으로 수렴하는 **Convex(밥그릇 형태)** 함수로 만들기 위해 로그 함수를 활용한 새로운 손실 함수 $L(f(\mathbf{x}), y)$를 정의합니다.
 
 > **단일 학습 데이터에 대한 손실 함수 정의:**
-> 
-> $$L(f(\mathbf{x}), y) = \begin{cases} > -\log(f(\mathbf{x})) & \text{if } y = 1 \\ > -\log(1 - f(\mathbf{x})) & \text{if } y = 0 > \end{cases}$$
+
+```math
+L(f(\mathbf{x}), y) = \begin{cases} 
+-\log(f(\mathbf{x})) & \text{if } y = 1 \\
+-\log(1 - f(\mathbf{x})) & \text{if } y = 0 
+\end{cases}
+```
+
+
 ![[Pasted image 20260721132927.png]]
 
 ##### 실제 정답 $y = 1$ 인 경우
@@ -190,7 +201,9 @@ $$\mathbf{w} \cdot \mathbf{x} + b < 0 \implies \hat{y} = 0$$
 
 전체 $m$개 데이터셋에 대한 총 비용 함수 $J(\mathbf{w}, b)$는 각 개별 데이터 손실값의 **평균**입니다.
 
-$$J(\mathbf{w}, b) = \frac{1}{m} \sum_{i=1}^{m} L(f(\mathbf{x}^{(i)}), y^{(i)})$$
+```math
+J(\mathbf{w}, b) = \frac{1}{m} \sum_{i=1}^{m} L(f(\mathbf{x}^{(i)}), y^{(i)})
+```
 
 - 이 손실 함수를 합쳐서 만든 비용 함수 $J(\mathbf{w}, b)$는 **매끄러운 Convex 형태**를 띠게 되므로, 경사 하강법을 사용하면 **항상 전역 최저점(Global Minimum)을 안전하게 찾을 수 있음이 보장**됩니다.
 
@@ -206,7 +219,9 @@ $$L(f(\mathbf{x}), y) = -y \log(f(\mathbf{x})) - (1 - y) \log(1 - f(\mathbf{x}))
 
 - 따라서 Cost Function은 아래와 같다.
 - 이 비용 함수는 Convex(볼록한 밥그릇 모양)이므로, 경사 하강법(Gradient Descent)을 사용하면 최적의 정답($\mathbf{w}, b$)에 안전하게 도달합니다.
-$$J(\mathbf{w}, b) = -\frac{1}{m} \sum_{i=1}^{m} \left[ y^{(i)} \log\left(f_{\mathbf{w},b}(\mathbf{x}^{(i)})\right) + (1 - y^{(i)}) \log\left(1 - f_{\mathbf{w},b}(\mathbf{x}^{(i)})\right) \right]$$
+```math
+J(\mathbf{w}, b) = -\frac{1}{m} \sum_{i=1}^{m} \left[ y^{(i)} \log\left(f_{\mathbf{w},b}(\mathbf{x}^{(i)})\right) + (1 - y^{(i)}) \log\left(1 - f_{\mathbf{w},b}(\mathbf{x}^{(i)})\right) \right]
+```
 #### 2). 이 손실 함수를 사용하는 이유: MLE (최대 우도 추정)
 
 이 복잡해 보이는 로그 손실 함수는 임의로 만들어낸 것이 아닙니다.
@@ -226,11 +241,14 @@ $$J(\mathbf{w}, b) = -\frac{1}{m} \sum_{i=1}^{m} \left[ y^{(i)} \log\left(f_{\ma
 #### 파라미터 업데이트 수식
 
 - **가중치($w_j$) 업데이트:**
-    $$w_j := w_j - \alpha \frac{1}{m} \sum_{i=1}^{m} \left( f_{\mathbf{w},b}(\mathbf{x}^{(i)}) - y^{(i)} \right) x_j^{(i)}$$
+```math
+w_j := w_j - \alpha \frac{1}{m} \sum_{i=1}^{m} \left( f_{\mathbf{w},b}(\mathbf{x}^{(i)}) - y^{(i)} \right) x_j^{(i)}
+```
     
 - **편향($b$) 업데이트:**
-    $$b := b - \alpha \frac{1}{m} \sum_{i=1}^{m} \left( f_{\mathbf{w},b}(\mathbf{x}^{(i)}) - y^{(i)} \right)$$
-    
+```math
+b := b - \alpha \frac{1}{m} \sum_{i=1}^{m} \left( f_{\mathbf{w},b}(\mathbf{x}^{(i)}) - y^{(i)} \right)
+```
 
 _(단, $\alpha$는 학습률(Learning Rate), $m$은 전체 데이터 개수)_
 
@@ -350,7 +368,9 @@ _(단, $\alpha$는 학습률(Learning Rate), $m$은 전체 데이터 개수)_
 #### 0). 정규화 비용 함수 (Regularized Cost Function)
 정규화는 **비용 함수(Cost Function)에 가중치($w$)의 크기를 제약하는 '벌점(Penalty)' 항목을 추가**하여 모델의 과대적합(Overfitting)을 방지하는 기법입니다.
 
-$$J(\mathbf{w}, b) = \underbrace{\frac{1}{2m} \sum_{i=1}^{m} \left( f_{\mathbf{w},b}(\mathbf{x}^{(i)}) - y^{(i)} \right)^2}_{\text{기본 비용 함수 (Mean Squared Error)}} + \underbrace{\frac{\lambda}{2m} \sum_{j=1}^{n} w_j^2}_{\text{정규화 항목 (Regularization Term)}}$$
+```math
+J(\mathbf{w}, b) = \underbrace{\frac{1}{2m} \sum_{i=1}^{m} \left( f_{\mathbf{w},b}(\mathbf{x}^{(i)}) - y^{(i)} \right)^2}_{\text{기본 비용 함수 (Mean Squared Error)}} + \underbrace{\frac{\lambda}{2m} \sum_{j=1}^{n} w_j^2}_{\text{정규화 항목 (Regularization Term)}}
+```
 
 #### 1). 정규화의 기본 직관
 
@@ -359,7 +379,9 @@ $$J(\mathbf{w}, b) = \underbrace{\frac{1}{2m} \sum_{i=1}^{m} \left( f_{\mathbf{w
 - **패널티 부여:** 비용 함수에 가중치의 제곱 항목($w_3^2, w_4^2$)을 크게 더해주면, 알고리즘은 전체 비용 $J$를 줄이기 위해 스스로 $w_3, w_4$를 **0에 가까운 매우 작은 값**으로 축소시키게 됩니다.
 	
 - Regularization Term을 미분하면 아래와 같은 수식이 된다. 
-- $$w_j \leftarrow \left(1 - \alpha \frac{\lambda}{m}\right) w_j - \alpha \times (\text{기존 오차 기울기})$$
+ ```math
+w_j \leftarrow \left(1 - \alpha \frac{\lambda}{m}\right) w_j - \alpha \times (\text{기존 오차 기울기})
+```
 - 매 단계(Iter)마다 가중치 $w_j$에 **$1$보다 작은 값(예: $0.99$)을 먼저 곱한 뒤**에 업데이트합니다. 
 	
 - 즉, 데이터가 가중치를 키우려고 아무리 당겨도, 수식 자체에 **"매번 가중치를 일정 비율 깎아먹는 장치"**가 내장되어 있어서 자연스럽게 $w$가 0을 향해 축소(Shrinkage)되는 것입니다.
@@ -398,7 +420,9 @@ $$J(\mathbf{w}, b) = \underbrace{\frac{1}{2m} \sum_{i=1}^{m} \left( f_{\mathbf{w
 	
 - 이를 해결하기 위해 로지스틱 회귀의 비용 함수에도 정규화 항목(Regularization Term)을 추가합니다.
 #### 1). 정규화된 로지스틱 회귀의 비용 함수
-$$J(\mathbf{w}, b) = -\frac{1}{m} \sum_{i=1}^{m} \left[ y^{(i)} \log\left(f_{\mathbf{w},b}(\mathbf{x}^{(i)})\right) + (1 - y^{(i)}) \log\left(1 - f_{\mathbf{w},b}(\mathbf{x}^{(i)})\right) \right] + \frac{\lambda}{2m} \sum_{j=1}^{n} w_j^2$$
+```math
+J(\mathbf{w}, b) = -\frac{1}{m} \sum_{i=1}^{m} \left[ y^{(i)} \log\left(f_{\mathbf{w},b}(\mathbf{x}^{(i)})\right) + (1 - y^{(i)}) \log\left(1 - f_{\mathbf{w},b}(\mathbf{x}^{(i)})\right) \right] + \frac{\lambda}{2m} \sum_{j=1}^{n} w_j^2
+```
 - **수학적 효과:** 가중치 $w_1, w_2, \dots, w_n$의 크기가 지나치게 커지는 것을 억제합니다.
     
 - **결과:** 고차 다항식 특성을 사용하더라도, 훈련 데이터의 노이즈에 과도하게 반응하지 않는 매끄럽고 합리적인 결정 경계(Decision Boundary)를 형성하여 새로운 데이터에 대한 일반화(Generalization) 능력이 향상됩니다.
@@ -406,7 +430,9 @@ $$J(\mathbf{w}, b) = -\frac{1}{m} \sum_{i=1}^{m} \left[ y^{(i)} \log\left(f_{\ma
 #### 2). 경사하강법 업데이트 수식
 - 비용 함수를 최소화하기 위해 경사 하강법(Gradient Descent)을 사용할 때, 편미분(Derivative) 항에 $\frac{\lambda}{m} w_j$가 추가됩니다.
 ##### (1). 가중치 업데이트 수식
-$$w_j \leftarrow w_j - \alpha \left[ \frac{1}{m} \sum_{i=1}^{m} \left( f_{\mathbf{w},b}(\mathbf{x}^{(i)}) - y^{(i)} \right) x_j^{(i)} + \frac{\lambda}{m} w_j \right]$$
+```math
+w_j \leftarrow w_j - \alpha \left[ \frac{1}{m} \sum_{i=1}^{m} \left( f_{\mathbf{w},b}(\mathbf{x}^{(i)}) - y^{(i)} \right) x_j^{(i)} + \frac{\lambda}{m} w_j \right]
+```
 
 - 수식 형태는 선형 회귀와 **완벽히 동일**해 보이지만, 가중치 조합을 입력받는 함수 $f_{\mathbf{w},b}(\mathbf{x})$의 정의가 다릅니다.
 	
@@ -415,6 +441,8 @@ $$w_j \leftarrow w_j - \alpha \left[ \frac{1}{m} \sum_{i=1}^{m} \left( f_{\mathb
 - **로지스틱 회귀:** $f_{\mathbf{w},b}(\mathbf{x}) = g(\mathbf{w} \cdot \mathbf{x} + b) \quad \left(\text{단, } g(z) = \frac{1}{1 + e^{-z}} \text{ Sigmoid 함수}\right)$
 
 ##### (2). 편향 업데이트 수식
-$$b \leftarrow b - \alpha \frac{1}{m} \sum_{i=1}^{m} \left( f_{\mathbf{w},b}(\mathbf{x}^{(i)}) - y^{(i)} \right)$$
+```math
+b \leftarrow b - \alpha \frac{1}{m} \sum_{i=1}^{m} \left( f_{\mathbf{w},b}(\mathbf{x}^{(i)}) - y^{(i)} \right)
+```
 
 - 편향 $b$는 정규화 항목에 포함되지 않으므로 기존 로지스틱 회귀 수식과 동일합니다.
