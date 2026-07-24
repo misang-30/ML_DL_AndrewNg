@@ -4,14 +4,21 @@
 ## 1. Multiple Features
 - Multiple Linear Regression
 
-> f w,b(x) = w1x1 + ... + w_n * x_n + b
-> f w,b(x) = w벡터 * x벡터 + b 
+- f w,b(x) = w1x1 + ... + w_n * x_n + b
+-  f w,b(x) = w벡터 * x벡터 + b 
+
+```math
+\vec{w} = \begin{bmatrix} w_1 \\ w_2 \\ \vdots \\ w_n \end{bmatrix}, \quad \vec{x} = \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_n \end{bmatrix}
+```
+
+```math
+\vec{w}^T = \begin{bmatrix} w_1 & w_2 & \dots & w_n \end{bmatrix}
+```
 
 
-
-$\vec{w} = \begin{bmatrix} w_1 \\ w_2 \\ \vdots \\ w_n \end{bmatrix}$, $\vec{x} = \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_n \end{bmatrix}$ 일 때, $\vec{w}^T = \begin{bmatrix} w_1 & w_2 & \dots & w_n \end{bmatrix}$
-
-$$f_{\vec{w},b}(\vec{x}) = \vec{w}^T\vec{x} + b$$
+```math
+f_{\mathbf{w},b}(\mathbf{x}) = \mathbf{w}^T\mathbf{x} + b
+```
 
 ---
 ---
