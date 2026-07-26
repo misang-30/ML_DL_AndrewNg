@@ -1,122 +1,181 @@
 
-Week 1에서 ML 프로젝트의 목표 설정과 평가 지표를 다루었다면, Week 2에서는 **오류 분석(Error Analysis), 데이터 분포가 다른 상황 대처법(Data Mismatch), 전이 학습(Transfer Learning) 및 종단간 딥러닝(End-to-End Deep Learning)** 등 머신러닝 시스템 구축 시 겪는 실전 문제 해결 전략을 다룹니다.
+2주차는 넷플릭스, 유튜브, 아마존 등에서 필수적으로 쓰이는 추천 시스템(Recommender Systems)을 다루며, 핵심 방식인 **협업 필터링**과 **콘텐츠 기반 필터링**을 공부하게 됩니다.
 
-## 1. 오류 분석 (Error Analysis)
+## 1. 추천 시스템의 기본 개념
 
-모델의 성능을 개선할 때, 무작정 아이디어를 적용하기보다 **어떤 에러를 먼저 수정해야 가장 큰 효과를 볼 수 있는지** 우선순위를 정하는 프로세스입니다.
+추천 시스템의 목표는 사용자 $u$가 아직 평가하지 않은 아이템 $i$에 대해 **어떤 평점 $y^{(u,i)}$을 줄지 예측**하는 것입니다.
 
-- **수동 오류 분석 (Manual Error Analysis):**
+- $r(i,j) = 1$: 사용자 $j$가 아이템 $i$에 평점을 남긴 경우
     
-    - Dev 세트에서 모델이 틀린 샘플 중 **약 100~500개**를 무작위로 추출하여 수동으로 검토합니다.
-        
-    - 표(Ceiling Analysis Table)를 만들어 오류 원인별 비율을 기록합니다.
-        
-    - **예시 (고양이 분류기):**
-        
-        - 개(Dog) 그림을 고양이로 착각: 전체 오류의 8%
-            
-        - 큰 고양이과(사자/호랑이) 착각: 전체 오류의 43%
-            
-        - 화질이 낮음(Blurry): 전체 오류의 61%
-            
-        - $\rightarrow$ 개 이미지를 구분하는 알고리즘을 개발해 봤자 개선 가능한 최대 오차는 8%뿐이므로, **화질이 낮거나 큰 고양이과 이미지를 처리하는 데 우선순위**를 두어야 합니다.
-            
-- **잘못 레이블링된 데이터 (Incorrectly Labeled Data) 처리:**
-    
-    - **Train set:** 딥러닝은 랜덤 노이즈 레이블에 비교적 강하므로, 오류 비율이 높지 않다면 굳이 일일이 수정할 필요는 없습니다.
-        
-    - **Dev/Test set:** 오류 분석 표에 "Incorrect Label" 항목을 추가하여 전체 오류에 미치는 영향을 측정합니다. 해당 오류가 Dev set 전체 오차의 상당 부분을 차지한다면 수동으로 수정해야 합니다.
-        
-- **빠른 초기 시스템 구축 (Build First System Quickly & Iterate):**
-    
-    - 처음부터 완벽한 시스템을 설계하려 하지 말고, **빠르게 초판(Baseline)을 만든 뒤** 오류 분석을 통해 개선 방향을 결정하는 것이 훨씬 효율적입니다.
-        
-
-## 2. 분포가 다른 데이터셋 다루기 (Mismatched Training and Dev/Test Sets)
-
-실무에서는 인터넷에서 수집한 고화질 데이터(량은 많음)와 실제 서비스에서 수집한 저화질 데이터(량은 적지만 중요한 목표)처럼 **분포가 다른 데이터**를 다루어야 할 때가 많습니다.
-
-### **1) 데이터 분할 전략**
-
-- **권장 방법:** 타깃 데이터(실제 서비스 데이터)를 Dev/Test set에 집중 배치합니다.
-    
-    - 예: 인터넷 데이터 20만 장 + 서비스 데이터 1만 장이 있을 때
-        
-    - **Train set:** 인터넷 데이터 20만 장 + 서비스 데이터 5,000장
-        
-    - **Dev / Test set:** 서비스 데이터 각각 2,500장 (동일 분포 유지)
-        
-
-### **2) Training-Dev Set을 활용한 오차 진단**
-
-Train set과 Dev set의 데이터 분포가 다르면, Dev set의 오차가 높을 때 **과적합(Variance)** 때문인지 **데이터 불일치(Data Mismatch)** 때문인지 구분하기 어렵습니다. 이를 해결하기 위해 **Training-Dev Set**을 도입합니다.
-
-- **Training-Dev Set:** Train set과 동일한 분포에서 추출되었지만, 모델 학습에는 사용되지 않는 검증용 데이터셋입니다.
+- $y^{(i,j)}$: 사용자 $j$가 아이템 $i$에 부여한 실제 평점 (예: 1~5점)
     
 
-|**평가 구간**|**오차 명칭**|**원인 및 해결책**|
-|---|---|---|
-|**Human-level Error $\leftrightarrow$ Train Error**|**Avoidable Bias**|모델 크기 확대, 더 긴 학습|
-|**Train Error $\leftrightarrow$ Training-Dev Error**|**Variance**|정규화(Regularization), 데이터 추가 수집|
-|**Training-Dev Error $\leftrightarrow$ Dev Error**|**Data Mismatch**|데이터 합성(Data Synthesis), Train set에 Dev 분포 데이터 추가|
-|**Dev Error $\leftrightarrow$ Test Error**|**Dev Set Overfitting**|더 큰 Dev set 준비|
+## 2. 협업 필터링 (Collaborative Filtering)
 
-### **3) Data Mismatch 해결 방법**
+사용자들의 과거 행동 데이터(평점, 구매 이력)만을 활용하여 비슷한 취향을 가진 사용자를 찾아 추천하는 방식입니다.
 
-- 수동 오류 분석을 통해 Train set과 Dev set의 차이점을 파악합니다.
+### ⚙️ 동작 원리: 인수 분해 (Matrix Factorization)
+
+각 아이템 $i$의 특징 벡터 $w^{(i)}$와 각 사용자 $j$의 선호도 벡터 $x^{(j)}$를 동시에 학습합니다.
+
+- **예측 평점:** $w^{(i)} \cdot x^{(j)} + b^{(j)}$
     
-- **인공 데이터 합성 (Artificial Data Synthesis):** 깨끗한 음성에 자동차 소음을 합성하여 시끄러운 환경의 음성 데이터를 만들어내는 기법입니다. (단, 소음 종류가 단순하면 특정 소음에만 과적합될 위험 존재)
-    
-
-## 3. 전이 학습과 다중 작업 학습 (Transfer & Multi-task Learning)
-
-### **1) 전이 학습 (Transfer Learning)**
-
-한 분야(Task A)에서 학습한 지식을 다른 분야(Task B)의 모델에 재사용하는 기법입니다.
-
-- **적용 조건:**
-    
-    1. Task A와 Task B의 입력 타입이 동일할 때 (예: 둘 다 이미지, 둘 다 음성).
-        
-    2. Task A의 데이터량이 Task B보다 월등히 많을 때.
-        
-    3. Task A의 하위 개념(Low-level feature)이 Task B를 학습하는 데 도움이 될 때.
-        
-- **방식:** ImageNet으로 사전 학습(Pre-training)된 모델의 출력층만 교체한 뒤, 대상 데이터셋으로 미세 조정(Fine-tuning)합니다.
+- 아이템의 특징(예: 영화의 장르 비율)과 사용자의 성향을 따로 사람이 입력하지 않아도, **평점 데이터만 가지고 경사 하강법(Gradient Descent)을 통해 두 벡터를 동시에 자동으로 학습**해냅니다.
     
 
-### **2) 다중 작업 학습 (Multi-task Learning)**
+### 💡 평균 정규화 (Mean Normalization)
 
-하나의 신경망이 동시에 여러 가지 작업(Task)을 수행하도록 학습시키는 방식입니다 (예: 자율주행 차에서 보행자, 표지판, 차량을 동시에 감지).
-
-- **적용 조건:**
+- **문제점:** 평점을 단 하나도 남기지 않은 신규 유저가 오면 예측 평점이 모두 0으로 계산됨.
     
-    1. 여러 작업이 저수준 특징(Low-level features)을 공유할 때.
+- **해결책:** 각 영화의 평균 평점을 구해 모든 평점에서 뺀 뒤 모델을 학습시킵니다. 신규 유저에게는 단순히 **해당 영화의 전체 평균 평점**을 예측값으로 제공하게 됩니다.
+    
+
+## 3. 콘텐츠 기반 필터링 (Content-based Filtering)
+
+아이템의 속성(장르, 배우 등)과 사용자의 속성(나이, 선호 장르 등)을 입력 피처로 받아 **딥러닝** 모델을 통해 추천하는 최신 방식입니다.
+
+```
+[사용자 특징 X_u] ───>  [User 신경망]   ───> Vector V_u (예: 128차원)
+                                                 │
+                                                 ├───> Dot Product (내적) ───> 예측 평점
+                                                 │
+[아이템 특징 X_i] ───> [Item 신경망]  ───> Vector V_i (예: 128차원)
+```
+
+1. **사용자 네트워크**와 **아이템 네트워크** 두 개의 신경망을 각각 구성합니다.
+    
+2. 각 네트워크는 임의 차원의 임베딩 벡터 $V_u$, $V_i$를 출력합니다.
+    
+3. 두 벡터의 내적($V_u \cdot V_i$)이 클수록 사용자가 해당 아이템을 좋아할 확률이 높다고 판단합니다.
+    
+
+## 4. 대규모 추천 시스템 구조 (Retrieval & Ranking)
+
+실제 수천만 개의 아이템이 있는 서비스(예: 유튜브)에서는 모든 아이템의 점수를 일일이 계산하기 어렵습니다. 따라서 2단계 파이프라인을 사용합니다.
+
+1. **후보 추출 (Retrieval Step):**
+    
+    - 유저가 최근 본 영화 10개와 유사한 영화, 가장 인기 있는 장르 등 빠르게 수백 개(100~500개)의 후보만 추려냄.
         
-    2. 각 작업별 데이터의 양이 비슷할 때.
-        
-    3. 모든 작업을 다룰 수 있을 만큼 신경망의 크기가 충분히 클 때.
+2. **순위 매기기 (Ranking Step):**
+    
+    - 학습시킨 콘텐츠 기반 딥러닝 모델에 추출된 후보들만 넣어서 정밀한 예측 점수 계산 후, 상위 N개를 유저에게 노출.
         
 
-## 4. 종단간 딥러닝 (End-to-End Deep Learning)
+> 💡 **2주차 핵심 요약**
+> 
+> - **Collaborative Filtering:** 평점 행렬만으로 사용자 성향과 아이템 특징을 _동시에 자동 학습_하는 기법.
+>     
+> - **Content-based Filtering:** 딥러닝 신경망을 통해 유저 벡터 $V_u$와 아이템 벡터 $V_i$를 만들어 *유사도(내적)*를 계산하는 기법.
+>     
+> - **Retrieval + Ranking:** 대용량 추천 서비스에서 속도와 정확도를 모두 잡기 위한 2단계 추천 기법.
 
-파이프라인 형태의 여러 단계 처리 과정을 **하나의 거대한 신경망으로 통합**하여 입력($X$)에서 출력($Y$)을 직접 파이프라이닝하는 방식입니다.
 
-- **예시 (음성 인식):**
+---
+---
+# 자세한 버전
+## Part 1. 협업 필터링 (Collaborative Filtering)
+
+### 1-1. 기호 및 명세
+
+- $n_u$: 사용자(User) 수, $n_m$: 아이템(Item) 수
     
-    - _전통적 방식:_ 음성 $X \rightarrow$ 특징 추출 $\rightarrow$ 음소 식별 $\rightarrow$ 단어 형성 $\rightarrow$ 텍스트 $Y$
-        
-    - _End-to-End 방식:_ 음성 $X \rightarrow$ **[ 하나의 신경망 ]** $\rightarrow$ 텍스트 $Y$
-        
-- **장점:**
+- $r(i,j) = 1$: 사용자 $j$가 아이템 $i$에 평가를 남긴 경우
     
-    - 데이터 본연의 특징을 스스로 학습하며, 인간의 편향된 사전 지식(Hand-designed components)에 제약받지 않습니다.
-        
-    - 파이프라인 중간 단계 수동 설계 비용을 절감합니다.
-        
-- **단점:**
+- $y^{(i,j)}$: 사용자 $j$가 아이템 $i$에 준 실제 평점
     
-    - $X \rightarrow Y$ 직접 매핑을 학습하기 위해 **엄청난 양의 레이블링 데이터**가 필요합니다.
+- $w^{(j)}, b^{(j)}$: 사용자 $j$의 파라미터
+    
+- $x^{(i)}$: 아이템 $i$의 특징 벡터 (차원 $n$)
+    
+
+### 1-2. 협업 필터링의 핵심 알고리즘
+
+기존에는 $x^{(i)}$를 사람이 직접 입력했으나, 협업 필터링은 **$x^{(i)}$와 $w^{(j)}, b^{(j)}$를 동시에 학습**합니다.
+
+- **통합 비용 함수 (Combined Cost Function):**
+    
+    $$J(w, b, x) = \frac{1}{2} \sum_{(i,j):r(i,j)=1} \left( w^{(j)} \cdot x^{(i)} + b^{(j)} - y^{(i,j)} \right)^2 + \frac{\lambda}{2} \sum_{j=1}^{n_u} \sum_{k=1}^{n} (w_k^{(j)})^2 + \frac{\lambda}{2} \sum_{i=1}^{n_m} \sum_{k=1}^{n} (x_k^{(i)})^2$$
+    
+- **경사 하강법 (Gradient Descent) 업데이트:**
+    
+    $$x_k^{(i)} := x_k^{(i)} - \alpha \left( \sum_{j:r(i,j)=1} \left( w^{(j)} \cdot x^{(i)} + b^{(j)} - y^{(i,j)} \right) w_k^{(j)} + \lambda x_k^{(i)} \right)$$
+    
+    $$w_k^{(j)} := w_k^{(j)} - \alpha \left( \sum_{i:r(i,j)=1} \left( w^{(j)} \cdot x^{(i)} + b^{(j)} - y^{(i,j)} \right) x_k^{(i)} + \lambda w_k^{(j)} \right)$$
+    
+    $$b^{(j)} := b^{(j)} - \alpha \left( \sum_{i:r(i,j)=1} \left( w^{(j)} \cdot x^{(i)} + b^{(j)} - y^{(i,j)} \right) \right)$$
+    
+
+### 1-3. 평균 정규화 (Mean Normalization)
+
+- **Cold Start 문제:** 평점을 하나도 안 남긴 유저는 모든 $w, b$가 0이 되어 예측값이 모두 0이 됨.
+    
+- **해결책:**
+    
+    1. 각 아이템 $i$의 평균 평점 $\mu_i$ 계산.
         
-    - 복잡한 문제를 해결할 때 데이터가 부족하면, 문제를 작은 단계로 나누어 각각 처리하는 방식(Multi-step approach)이 훨씬 잘 작동합니다.
+    2. 평점 행렬 $Y$의 각 요소에서 $\mu_i$를 뺀 $\mathbf{Y}_{norm}$ 생성.
         
+    3. $\mathbf{Y}_{norm}$으로 모델 학습 후, 최종 예측 시 다시 $\mu_i$를 더함:
+        
+        $$\text{Prediction} = w^{(j)} \cdot x^{(i)} + b^{(j)} + \mu_i$$
+        
+
+## Part 2. 콘텐츠 기반 필터링 (Content-based Filtering)
+
+### 2-1. Deep Learning 기반 임베딩 방식
+
+- **입력 데이터:**
+    
+    - 사용자 피처 $x_u$ (나이, 성별, 과거 선호 장르 등)
+        
+    - 아이템 피처 $x_i$ (장르, 개봉일, 배우 등)
+        
+- **네트워크 구조:**
+    
+    - User Network: $x_u \rightarrow v_u \in \mathbb{R}^k$ (유저 임베딩 벡터)
+        
+    - Item Network: $x_i \rightarrow v_i \in \mathbb{R}^k$ (아이템 임베딩 벡터)
+        
+- **예측 점수:**
+    
+    $$v_u \cdot v_i \quad \text{또는 Cosine Similarity} \quad \frac{v_u \cdot v_i}{\vert{}\vert{}v_u\vert{}\vert{} \vert{}\vert{}v_i\vert{}\vert{}}$$
+    
+
+### 2-2. 손실 함수 (Loss Function)
+
+실제 평점이 $y^{(u,i)}$일 때:
+
+$$J = \sum_{(u,i):r(u,i)=1} \left( v_u \cdot v_i - y^{(u,i)} \right)^2 + \text{Regularization}$$
+
+## Part 3. 이진 반응 데이터 & 대규모 시스템 (Retrieval & Ranking)
+
+### 3-1. Binary Labels (좋아요/클릭/구매)
+
+- 평점 숫자가 아닌 1(관심/클릭)과 0(무관심/미클릭) 데이터 처리.
+    
+- 손실 함수로 **Binary Cross-Entropy** 사용:
+    
+    $$\text{Cost} = - y \log(f) - (1-y) \log(1-f) \quad \left(\text{단, } f = \sigma(v_u \cdot v_i + b)\right)$$
+    
+
+### 3-2. Retrieval & Ranking 파이프라인
+
+수백만 개의 아이템을 실시간 처리하기 위한 구조:
+
+1. **Retrieval (후보군 추출):**
+    
+    - 유저가 최근 시청한 아이템 10개와 비슷한 아이템
+        
+    - 유저의 선호 카테고리 Top 3 내 최신/인기 아이템
+        
+    - 대략 수백 개(100~500개)로 후보군 축소 (빠른 연산)
+        
+2. **Ranking (순위 매기기):**
+    
+    - Retrieval에서 뽑힌 수백 개 아이템에 대해서만 Content-based Deep Learning 모델 적용.
+        
+    - 정확한 $v_u \cdot v_i$ 점수 산출 및 내림차순 정렬 후 Top N개 노출.
+        
+
+이제 강의의 **공식, 기호, 세부 하이퍼파라미터 알고리즘 단계**까지 빠짐없이 포함되었습니다! 추가로 3주차 내용도 필요하시면 편하게 말씀하세요.

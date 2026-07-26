@@ -1,147 +1,255 @@
 
 
-Week 3는 모델 성능을 최대로 끌어올리기 위한 **하이퍼파라미터 탐색 전략**, 학습을 안정화하고 속도를 획기적으로 개선하는 **배치 정규화(Batch Normalization)**, 그리고 다중 클래스 분류(Softmax) 및 딥러닝 프레임워크(TensorFlow)를 다룹니다.
+1주차는 비지도 학습(Unsupervised Learning)의 대표적 알고리즘인 **K-평균(K-means) 군집화**와 이상 탐지(Anomaly Detection)를 다룹니다.
 
-## 1. 하이퍼파라미터 튜닝 (Hyperparameter Tuning)
+## 1. 비지도 학습 (Unsupervised Learning)이란?
 
-### **1) 하이퍼파라미터 우선순위 (Priority Level)**
-
-- **1순위 (가장 중요):** 학습률 $\alpha$ (Learning Rate)
+- **지도 학습(Supervised Learning):** 입력 데이터 $x$와 정답 라벨 $y$가 함께 제공됨.
     
-- **2순위:** Momentum 베타 $\beta_1$ (보통 0.9), 은닉 유닛 수 ($n^{[l]}$), 미니배치 크기 (Mini-batch size)
+- **비지도 학습(Unsupervised Learning):** 정답 라벨 $y$가 **없고** 입력 데이터 $x$만 존재함.
     
-- **3순위:** 레이어 개수 ($L$), 학습률 감쇠율 (Learning rate decay)
-    
-- **기본 고정값:** Adam 최적화의 $\beta_2=0.999$, $\epsilon=10^{-8}$
+- **목적:** 데이터 내부의 숨겨진 구조, 패턴, 그룹을 스스로 찾아내는 것.
     
 
-### **2) 탐색 공간 정의 방식 (Grid vs Random Search)**
+## 2. K-평균 군집화 (K-means Clustering)
 
-- **격자 탐색 (Grid Search):** 과거 정적인 모델에서 쓰이던 방식으로, 딥러닝에서는 비효율적입니다.
+데이터를 유사한 특징을 가진 $K$개의 그룹(Cluster)으로 묶어주는 대표적인 군집화 알고리즘입니다.
+
+### ⚙️ 동작 과정
+
+1. **중심점(Centroid) 초기화:** K개의 중심점을 임의의 위치에 배치.
     
-- **무작위 탐색 (Random Search):** 하이퍼파라미터 공간 내에서 무작위 점들을 선택합니다. 어떤 하이퍼파라미터가 성능에 더 지대한 영향을 미치는지 미리 알 수 없기 때문에 훨씬 유용합니다.
+2. **데이터 할당 (Assign):** 각 데이터 포인트를 가장 가까운 중심점에 할당.
     
-- **조밀화 탐색 (Coarse to Fine Search):** 무작위 탐색 후 성능이 잘 나오는 특정 영역을 발견하면, 해당 구간을 집중적으로 밀도 있게 다시 탐색합니다.
+3. **중심점 이동 (Move):** 각 클러스터에 속한 데이터들의 평균 위치로 중심점 이동.
+    
+4. **반복:** 중심점 위치가 더 이상 바뀌지 않을 때까지 2~3 과정을 수렴할 때까지 반복.
     
 
-### **3) 적절한 스케일(Scale) 선택 (Log Scale)**
+### 💡 주요 핵심 요소
 
-하이퍼파라미터의 범위를 무작위로 선택할 때 선형 스케일(Linear Scale)이 아닌 로그 스케일(Log Scale)을 써야 하는 경우가 있습니다.
-
-- **학습률 $\alpha \in [0.0001, 1]$ 탐색 예시:**
+- **비용 함수 (Cost Function / Distortion Function):**
     
-    - 선형 스케일로 선택하면 $0.1 \sim 1$ 구간에 데이터의 90%가 몰리게 되어 $0.0001 \sim 0.1$ 구간을 제대로 탐색하지 못함.
+    - 각 데이터와 소속된 클러스터 중심점 사이의 거리 제곱합을 최소화하는 것이 목적.
         
-    - **로그 스케일 적용:** $r \in [-4, 0]$ 범위에서 $r$을 무작위 선택한 뒤 $\alpha = 10^r$ 로 설정 ($10^{-4} \sim 10^0$).
+- **중심점 초기화 문제 (Random Initialization):**
+    
+    - 초기 중심 위치에 따라 지역 최적값(Local Optima)에 갇힐 수 있음.
         
-- **Momentum $\beta \in [0.9, 0.999]$ 탐색 예시:**
-    
-    - $1 - \beta \in [0.001, 0.1]$ 로 변환하여 $r \in [-3, -1]$ 범위에서 로그 스케일 탐색 적용.
+    - **해결책:** K-means를 여러 번(예: 50~100회) 무작위 초기화하여 run한 후, 비용 함수 $J$가 가장 작은 결과를 선택.
         
-
-### **4) 하이퍼파라미터 튜닝 접근 방식**
-
-- **판다 방식 (Panda Approach / Babysitting Model):** 리소스(GPU 등)가 부족할 때 사용. 하나의 모델을 돌려보면서 손실 곡선을 지켜보고 학습률이나 파라미터를 수동으로 조금씩 조절해 나감.
+- **클러스터 개수 $K$ 선택하기:**
     
-- **캐비어 방식 (Caviar Approach / Parallel Models):** 리소스가 충분할 때 사용. 여러 하이퍼파라미터 조합을 가진 다양한 모델을 동시에 대량으로 학습시켜 최적의 결과를 골라냄.
-    
-
-## 2. 배치 정규화 (Batch Normalization)
-
-입력 데이터 $X$를 정규화했던 것처럼, **은닉층의 활성화 전 값 $Z^{[l]}$ (또는 $A^{[l]}$)을 정규화**하여 다음 레이어로 전달하는 강력한 테크닉입니다.
-
-### **배치 정규화 연산 단계 (미니배치 $B$에 대해)**
-
-1. **평균 계산:** $\mu = \frac{1}{m} \sum_{i} z^{(i)}$
-    
-2. **분산 계산:** $\sigma^2 = \frac{1}{m} \sum_{i} (z^{(i)} - \mu)^2$
-    
-3. **정규화:** $z_{\text{norm}}^{(i)} = \frac{z^{(i)} - \mu}{\sqrt{\sigma^2 + \epsilon}}$ (평균 0, 분산 1로 변환)
-    
-4. **스케일 및 이동 (Re-scaling & Shift):**
-    
-    $$\tilde{z}^{(i)} = \gamma z_{\text{norm}}^{(i)} + \beta$$
-    
-    - $\gamma, \beta$: 학습 가능한 파라미터 (네트워크가 필요한 표현력을 스스로 유지하도록 보장).
+    - **Elbow Method:** $K$를 늘려가며 비용 함수 감소폭이 꺾이는 지점("팔꿈치")을 선택.
         
-    - 만약 $\gamma = \sqrt{\sigma^2 + \epsilon}$, $\beta = \mu$ 라면 $\tilde{z}^{(i)} = z^{(i)}$로 원상복구 가능.
+    - **목적 기반 선택 (Downstream Purpose):** 비즈니스 목적(예: 의류 사이즈 S/M/L 3개 구분 등)에 따라 직접 지정.
         
 
-> **주의사항 (Bias $b^{[l]}$의 제거):**
+## 3. 이상 탐지 (Anomaly Detection)
+
+정상적인 데이터 패턴을 학습한 뒤, 새로운 데이터가 들어왔을 때 정상 범주를 벗어난 희귀한 데이터(이상치)를 찾아내는 기술입니다.
+
+### ⚙️ 가우시안 분포 (정규분포) 모델링
+
+- 각 특징(Feature) $x_i$가 평균 $\mu_i$, 분산 $\sigma_i^2$을 갖는 가우시안 분포(Gaussian Distribution)를 따른다고 가정합니다.
+    
+- 새로운 데이터 $x$가 나타날 확률 density $p(x)$를 아래와 같이 계산합니다:
+    
+    $$p(x) = p(x_1; \mu_1, \sigma_1^2) \times p(x_2; \mu_2, \sigma_2^2) \times \dots \times p(x_n; \mu_n, \sigma_n^2)$$
+    
+- **판정 기준:**
+    
+    - $p(x) < \epsilon$ (임계값): 이상치 (Anomaly)로 판정
+        
+    - $p(x) \ge \epsilon$: 정상 (Normal)으로 판정
+        
+
+### ⚖️ 이상 탐지 vs 지도 학습 (분류)
+
+|**구분**|**이상 탐지 (Anomaly Detection)**|**지도 학습 (Classification)**|
+|---|---|---|
+|**양성(Positive) 데이터 수**|매우 적음 (0~20개 내외의 이상 데이터)|양성/음성 데이터 모두 충분히 많음|
+|**이상 유형**|수많은 **알 수 없는 새로운 유형**의 불량이 발생할 수 있음|기존 데이터와 **유사한 유형**의 패턴을 계속 분류함|
+|**주요 사용 예시**|사기 검출(Fraud), 서버 감시, 제조 결함 탐지|스팸 메일 분류, 암 진단, Weather 예측|
+
+> 💡 **1주차 핵심 요약**
 > 
-> 배치 정규화 과정에서 평균 $\mu$를 빼기 때문에, 기존의 편향 벡터 $b^{[l]}$의 효과는 상쇄되어 사라집니다. 따라서 BatchNorm을 적용할 때는 $b^{[l]}$을 제거하거나 0으로 설정하고, 대신 **$\beta^{[l]}$** 파라미터가 편향 역할을 대신하도록 합니다.
+> - **K-means:** 라벨 없는 데이터를 거리 기반으로 $K$개 그룹으로 묶는 알고리즘.
+>     
+> - **Anomaly Detection:** 정상 데이터의 가우시안 확률 분포 $p(x)$를 만들어, 확률이 임계값 $\epsilon$보다 낮으면 이상 데이터로 분류하는 기법.
 
-### **배치 정규화가 잘 작동하는 이유**
 
-- **학습 속도 향상:** 가중치 초기화에 덜 민감해지고 더 높은 학습률($\alpha$)을 사용할 수 있습니다.
+
+---
+---
+# 자세한 버전
+## Part 1. K-평균 군집화 (K-means Clustering)
+
+### 1-1. 지도 학습 vs 비지도 학습
+
+- **지도 학습(Supervised Learning):** 학습 데이터셋 $\{ (x^{(1)}, y^{(1)}), \dots, (x^{(m)}, y^{(m)}) \}$
     
-- **공변량 변화 (Covariate Shift) 완화:** 이전 레이어의 가중치가 바뀜에 따라 다음 레이어의 입력 분포가 계속 흔들리는 현상을 줄여주어, 각 레이어가 다른 레이어와 독립적으로 안정적인 학습을 하도록 돕습니다.
-    
-- **경미한 정규화 효과 (Regularization Effect):** 각 미니배치의 평균과 분산에 미세한 노이즈가 추가되므로, 드롭아웃처럼 약간의 정규화(과적합 방지) 효과를 줍니다.
-    
-
-### **테스트 단계(Inference)에서의 BatchNorm**
-
-테스트 시에는 샘플 1개만 들어올 수도 있으므로 미니배치의 $\mu, \sigma^2$를 직접 구할 수 없습니다.
-
-대신 학습 도중 각 미니배치에서 계산된 $\mu, \sigma^2$의 지수 가중 이동 평균(Exponentially Weighted Average)을 미리 저장해두었다가 테스트 시 사용합니다.
-
-## 3. 다중 클래스 분류 (Softmax Regression)
-
-이진 분류(Sigmoid)를 확장하여 **$C$개의 클래스** 중 하나로 분류하는 방법입니다.
-
-### **Softmax 연산 공식**
-
-출력층 $L$에서 선형 연산 $z^{[L]}$이 주어졌을 때:
-
-1. Temporary activation: $t = e^{z^{[L]}}$ (element-wise)
-    
-2. 확률화 (Softmax):
-    
-    $$a^{[L]}_i = \frac{e^{z^{[L]}_i}}{\sum_{j=1}^{C} e^{z^{[L]}_j}}$$
-    
-    _(모든 출력의 합은 1이 되며, 각 출력을 해당 클래스일 확률로 해석 가능)_
+- **비지도 학습(Unsupervised Learning):** 학습 데이터셋 $\{ x^{(1)}, x^{(2)}, \dots, x^{(m)} \}$ (라벨 $y$ 없음)
     
 
-### **손실 함수 (Loss Function)**
+### 1-2. K-means 알고리즘 최적화 과정
 
-$$\mathcal{L}(\hat{y}, y) = -\sum_{j=1}^{C} y_j \log \hat{y}_j$$
-
-_(원-핫 인코딩된 정답 클래스의 확률값에만 $-\log$를 취해 손실 계산)_
-
-## 4. 딥러닝 프레임워크 (Deep Learning Frameworks)
-
-경사하강법과 역전파 알고리즘을 매번 직접 작성하는 대신, 효율적인 프레임워크를 사용합니다.
-
-### **대표적 프레임워크 및 선택 기준**
-
-- **주요 프레임워크:** TensorFlow, PyTorch 등
+1. **클러스터 중심점(Centroid) 무작위 초기화:** $K$개의 중심점 $\mu_1, \mu_2, \dots, \mu_K \in \mathbb{R}^n$ 선택
     
-- **선택 기준:** 코드 작성의 용이성, 학습/실행 속도, 오픈소스 생태계 및 지속성
+2. **Loop 수렴할 때까지 반복:**
     
+    - **[Step 1] 데이터 할당 (Cluster Assignment):**
+        
+        각 데이터 $i=1 \dots m$에 대해 가장 가까운 중심점의 인덱스 $c^{(i)}$ 계산
+        
+        $$c^{(i)} = \min_k \vert{}\vert{} x^{(i)} - \mu_k \vert{}\vert{}^2$$
+        
+    - **[Step 2] 중심점 이동 (Move Centroid):**
+        
+        각 클러스터 $k=1 \dots K$에 대해 할당된 데이터들의 평균으로 위치 업데이트
+        
+        $$\mu_k = \frac{1}{\vert{}c_k\vert{}} \sum_{i \in c_k} x^{(i)}$$
+        
+        _(단, 클러스터에 할당된 데이터가 0개면 해당 중심점은 삭제하거나 재초기화)_
+        
 
-### **TensorFlow 기본 개념 및 구조**
+### 1-3. 비용 함수 (Cost Function / Distortion Function)
 
-- **자동 미분 (Auto-Diff):** 순전파(Forward Prop) 연산만 작성해 두면, 프레임워크가 그래프를 기반으로 역전파(Backprop) 및 기울기 계산을 자동으로 수행합니다.
+K-means는 다음 비용 함수 $J$를 **최소화**하는 과정입니다:
+
+$$J(c^{(1)}, \dots, c^{(m)}, \mu_1, \dots, \mu_K) = \frac{1}{m} \sum_{i=1}^{m} \vert{}\vert{} x^{(i)} - \mu_{c^{(i)}} \vert{}\vert{}^2$$
+
+- Step 1은 $\mu$를 고정하고 $c^{(i)}$에 대해 $J$를 최소화.
     
-- **비용 함수 및 최적화 구현 예시:**
-    
-    Python
-    
-    ```
-    import tensorflow as tf
-    
-    # 파라미터 선언
-    w = tf.Variable(0.0, dtype=tf.float32)
-    # 최적화 알고리즘 설정 (Adam)
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.1)
-    
-    # 손실 함수 정의 및 1스텝 최적화
-    def train_step():
-        with tf.GradientTape() as tape:
-            cost = w**2 - 10*w + 25  # (w - 5)^2
-        grads = tape.gradient(cost, [w])
-        optimizer.apply_gradients(zip(grads, [w]))
-    ```
+- Step 2는 $c^{(i)}$를 고정하고 $\mu$에 대해 $J$를 최소화.
     
 
+### 1-4. 국소 최적해(Local Optima) 탈출법
+
+- 초기 중심점 선택에 따라 Global Optima가 아닌 Local Optima에 갇힐 수 있음.
+    
+- **Random Initialization 기법:**
+    
+    1. $K < m$ 인 데이터 포인트 $K$개를 무작위 추출하여 초기 중심점으로 설정.
+        
+    2. K-means를 **50~100번 독립적으로 실행**.
+        
+    3. 계산된 100개의 비용 함수 $J$ 중 **가장 값이 작은 결과**를 최종 모델로 선택.
+        
+
+### 1-5. 클러스터 개수 $K$ 결정 방법
+
+1. **Elbow Method:** $K$에 따른 $J$의 감소 그래프를 그려 꺾이는 지점(Elbow) 선택. (단, 완만한 곡선일 경우 명확한 지점을 찾기 힘듦)
+    
+2. **후속 목적 기준 (Downstream Purpose):** T셔츠 사이즈 제작(S, M, L $\rightarrow K=3$) 등 비즈니스 요구사항에 따라 결정.
+    
+
+## Part 2. 이상 탐지 (Anomaly Detection)
+
+### 2-1. 가우시안(정규) 분포 (Gaussian Distribution)
+
+데이터 $x \in \mathbb{R}$가 평균 $\mu$, 분산 $\sigma^2$을 가질 때:
+
+$$x \sim \mathcal{N}(\mu, \sigma^2) \implies p(x; \mu, \sigma^2) = \frac{1}{\sqrt{2\pi}\sigma} \exp\left( -\frac{(x-\mu)^2}{2\sigma^2} \right)$$
+
+- **모수 추정 (Parameter Estimation):**
+    
+    $$\mu_j = \frac{1}{m} \sum_{i=1}^{m} x_j^{(i)}, \quad \sigma_j^2 = \frac{1}{m} \sum_{i=1}^{m} (x_j^{(i)} - \mu_j)^2$$
+    
+
+### 2-2. 이상 탐지 알고리즘 절차
+
+1. **특징 선택 (Feature Selection):** 정규분포를 잘 따르는 $n$개의 피처 $x_1, \dots, x_n$ 선정.
+    
+2. **모수 학습:** $m$개 데이터로 각 피처의 $\mu_1, \dots, \mu_n$ 및 $\sigma_1^2, \dots, \sigma_n^2$ 계산.
+    
+3. **확률 계산 (독립 가정):**
+    
+    $$p(x) = \prod_{j=1}^{n} p(x_j; \mu_j, \sigma_j^2) = \prod_{j=1}^{n} \frac{1}{\sqrt{2\pi}\sigma_j} \exp\left( -\frac{(x_j-\mu_j)^2}{2\sigma_j^2} \right)$$
+    
+4. **판정:** $p(x) < \epsilon$ 이면 **Anomaly (1)**, $p(x) \ge \epsilon$ 이면 **Normal (0)**.
+    
+
+### 2-3. 데이터 세트 분할 및 평가 방법
+
+- **데이터 구성 예시:** 정상 데이터 10,000개 + 이상 데이터 20개
+    
+    - **Training Set:** 정상 6,000개 ($p(x)$ 파라미터 $\mu, \sigma^2$ 학습용, 라벨 없음)
+        
+    - **Cross Validation (CV) Set:** 정상 2,000개 + 이상 10개 ($\epsilon$ 최적화용)
+        
+    - **Test Set:** 정상 2,000개 + 이상 10개 (최종 성능 평가용)
+        
+- **평가 지표:** 데이터 불균형이 극심하므로 정확도(Accuracy) 대신 **Precision, Recall, $F_1$-Score** 사용.
+    
+
+### 2-4. Anomaly Detection vs Supervised Learning 비교
+
+|**비교 항목**|**Anomaly Detection**|**Supervised Classification**|
+|---|---|---|
+|**Positive 데이터($y=1$) 수**|매우 적음 (0~20개)|많음 (양성/음성 모두 충분)|
+|**Negative 데이터($y=0$) 수**|매우 많음|많음|
+|**이상 패턴의 다양성**|알려지지 않은 새로운 형태의 이상 발생|기존 데이터를 닮은 알려진 패턴 판별|
+
+### 2-5. 피처 엔지니어링 (Feature Engineering)
+
+- **비가우시안 데이터 다루기:** 데이터가 종 모양이 아니면 $\log(x)$, $\log(x+c)$, $\sqrt{x}$, $x^{0.5}$ 변환을 취해 정규분포 형태로 변환.
+    
+- **새로운 피처 생성:** 정상 데이터인데 $p(x)$가 크게 나오는 이상치가 있다면, 두 피처의 비율(예: $\frac{\text{CPU load}}{\text{network traffic}}$) 등을 새 피처로 추가하여 구분력을 높임.
+
+---
+---
+
+
+## 1. 코스 3 - 1주차: 비지도 학습 & 이상 탐지
+
+### 1). K-평균 군집화 (K-means Clustering)
+
+#### (1). 알고리즘 최적화 과정 및 비용 함수
+
+- **알고리즘 절차:**
+    
+    1. $K$개의 중심점(Centroid) $\mu_1, \dots, \mu_K$를 무작위로 초기화.
+        
+    2. **[데이터 할당]** 각 데이터 $x^{(i)}$에 대해 가장 가까운 중심점 인덱스 $c^{(i)}$ 할당:
+        
+        $$c^{(i)} = \min_k \vert{}\vert{} x^{(i)} - \mu_k \vert{}\vert{}^2$$
+        
+    3. **[중심점 이동]** 각 클러스터에 할당된 데이터들의 평균 위치로 중심점 업데이트:
+        
+        $$\mu_k = \frac{1}{\vert{}c_k\vert{}} \sum_{i \in c_k} x^{(i)}$$
+        
+    4. 중심점 위치 변화가 없을 때까지 2~3 과정 반복.
+        
+- **비용 함수 (Distortion Function):**
+    
+    $$J(c^{(1)}, \dots, c^{(m)}, \mu_1, \dots, \mu_K) = \frac{1}{m} \sum_{i=1}^{m} \vert{}\vert{} x^{(i)} - \mu_{c^{(i)}} \vert{}\vert{}^2$$
+    
+
+#### (2). 국소 최적해 탈출 및 $K$ 선택 기법
+
+- **Random Initialization:** 초기 중심 위치에 따라 Local Optima에 갇히는 문제를 막기 위해, K-means를 50~100회 독립적으로 실행한 뒤 비용 함수 $J$가 가장 작은 결과를 최종 선택.
+    
+- **Elbow Method:** $K$ 증가에 따른 $J$의 감소폭이 급격히 꺾이는 "팔꿈치" 지점을 선택하거나, 비즈니스 목적(예: 의류 사이즈 S/M/L)에 맞춰 직접 지정.
+    
+
+### 2). 이상 탐지 (Anomaly Detection)
+
+#### (1). 가우시안 분포 모델링 및 판정
+
+- 각 피처 $x_j$가 정규분포를 따른다고 가정하고 평균 $\mu_j$와 분산 $\sigma_j^2$을 계산.
+    
+- 전체 확률 밀도 함수 계산:
+    
+    $$p(x) = \prod_{j=1}^{n} p(x_j; \mu_j, \sigma_j^2) = \prod_{j=1}^{n} \frac{1}{\sqrt{2\pi}\sigma_j} \exp\left( -\frac{(x_j-\mu_j)^2}{2\sigma_j^2} \right)$$
+    
+- **판정 기준:** $p(x) < \epsilon$ 이면 이상치(Anomaly, 1), $p(x) \ge \epsilon$ 이면 정상(Normal, 0).
+    
+
+#### (2). 데이터 분할 및 평가 지표
+
+- **데이터 구성:** 정상 데이터 위주로 Training Set(정상만으로 $\mu, \sigma^2$ 학습)을 구성하고, CV/Test Set에는 희귀한 이상치를 일부 포함시킴.
+    
+- **평가 지표:** 극심한 데이터 불균형 문제로 인해 Accuracy 대신 **Precision, Recall, $F_1$-Score**로 성능을 평가함.
+    
+- **피처 엔지니어링:** 비대칭 데이터는 $\log(x)$ 변환을 취해 가우시안 형태로 만들고, 필요한 경우 두 피처의 비율(예: $\frac{\text{CPU load}}{\text{network traffic}}$) 등을 신규 피처로 만듦.
