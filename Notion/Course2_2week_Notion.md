@@ -742,16 +742,18 @@ result = dJ_dW.subs(W, 2)  # 출력: 4
 
 ### 3). 역전파(Backprop) 계산 과정 (오른쪽 $\rightarrow$ 왼쪽)
 
-- 목표는 **"비용 $J$를 줄이기 위해 $W$와 $B$를 얼마큼 수정해야 하는가?"** 즉, $\frac{\partial J}{\partial W}$ 와 $\frac{\partial J}{\partial B}$를 구하는 것입니다.
+- 목표는 **"비용 $J$를 줄이기 위해 $W$와 $B$를 얼마큼 수정해야 하는가?"**
+- 즉, $\frac{\partial J}{\partial W}$ 와 $\frac{\partial J}{\partial B}$를 구하는 것입니다.
 - **역전파(Backpropagation)의 진짜 목적:**
-    
-    $W$와 $B$ 자체를 구하는 것이 아니라, "비용함수 $J$를 $W$와 $B$로 각각 편미분한 값(기울기, Gradient)"을 구하는 것입니다.
+- $W$와 $B$ 자체를 구하는 것이 아니라, "비용함수 $J$를 $W$와 $B$로 각각 편미분한 값(기울기, Gradient)"을 구하는 것입니다.
     
 - **최종 파라미터($W, B$) 업데이트:**
     
-    역전파가 구해준 그 미분값을 넘겨받아서, **경사하강법(Gradient Descent)이 $W$와 $B$의 값을 실제로 업데이트**합니다.
+- 역전파가 구해준 그 미분값을 넘겨받아서, **경사하강법(Gradient Descent)이 $W$와 $B$의 값을 실제로 업데이트**합니다.
 
-$$\begin{aligned} \text{Step 1 (오차 노드 미분):} \quad & \frac{\partial J}{\partial D} = D = \mathbf{2} \\ \text{Step 2 (예측값 노드 미분):} \quad & \frac{\partial J}{\partial A} = \frac{\partial J}{\partial D} \times 1 = \mathbf{2} \\ \text{Step 3 (중간/편향 미분):} \quad & \frac{\partial J}{\partial C} = \mathbf{2}, \quad \mathbf{\frac{\partial J}{\partial B} = 2} \\ \text{Step 4 (가중치 미분):} \quad & \mathbf{\frac{\partial J}{\partial W}} = \frac{\partial J}{\partial C} \times X = 2 \times (-2) = \mathbf{-4} \end{aligned}$$
+$$\begin{aligned} \text{Step 1 (오차 노드 미분):} \quad & \frac{\partial J}{\partial D} = D = \mathbf{2} \\ 
+\text{Step 2 (예측값 노드 미분):} \quad & \frac{\partial J}{\partial A} = \frac{\partial J}{\partial D} \times 1 = \mathbf{2} \\ \text{Step 3 (중간/편향 미분):} \quad & \frac{\partial J}{\partial C} = \mathbf{2}, \quad \mathbf{\frac{\partial J}{\partial B} = 2} \\ 
+\text{Step 4 (가중치 미분):} \quad & \mathbf{\frac{\partial J}{\partial W}} = \frac{\partial J}{\partial C} \times X = 2 \times (-2) = \mathbf{-4} \end{aligned}$$
 
 - **결과 해석**:
     
