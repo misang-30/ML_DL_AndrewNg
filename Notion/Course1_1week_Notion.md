@@ -141,6 +141,8 @@ $$J(w,b) = \frac{1}{2m} \sum_{i=1}^{m} \left( f_{w,b}(x^{(i)}) - y^{(i)} \right)
 ### 4). Linear Regression 에서 GD 적용
 - 아래가 공식이다. J(w)를 미분한 값을 넣어둔 것이다.
 - 가설 함수 f(x) = wx+b 대입해서 미분하면 쉽게 증명 가능.
+
+
 $$\begin{aligned} w &= w - \alpha \frac{1}{m} \sum_{i=1}^{m} \left( f_{w,b}(x^{(i)}) - y^{(i)} \right) x^{(i)} \\ b &= b - \alpha \frac{1}{m} \sum_{i=1}^{m} \left( f_{w,b}(x^{(i)}) - y^{(i)} \right) \end{aligned}$$
 
 ### 5). Running GD 
