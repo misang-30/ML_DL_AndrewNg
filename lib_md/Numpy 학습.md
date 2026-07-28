@@ -189,7 +189,7 @@ print(np.argsort(arr)) # 정렬되었을 때의 원본 인덱스 위치 반환
 > 
 > - 행렬 곱 연산(`@`)을 수행하려면 앞 행렬의 열 개수와 뒤 행렬의 행 개수가 일치해야 합니다. (예: `(A, B) @ (B, C) -> (A, C)`)
 >     
-> - `argsort`는 정렬된 순서의 위치(인덱스)를 반환하므로 데이터 정렬 및 상위 N개 추출 시 자주 사용됩니다.
+> - `argsort`는 정렬된 순서의 위치(인덱스)를 반환하므로 데이터 정렬 및 상위 N개 추출 시 자주 사용됩1니다.
 
 
 
@@ -279,7 +279,7 @@ squeezed = np.squeeze(expanded) # shape: (4,)
 # 3. 차원 위치 변경 (Transpose / Swapaxes)
 img = np.zeros((224, 224, 3)) # (Height, Width, Channel) - OpenCV 형태
 # 파이토치는 (Channel, Height, Width) 순서를 요구하므로 축 변경 필요
-img_pt = np.moveaxis(img, -1, 0) # shape: (3, 224, 224)
+img_pt = np.moveaxis(img, -1, 0) # shape: (3, 224, 224), -1(마지막 열)을 0(첫번째 열)로 옮기라는 것.
 ```
 
 > **핵심 포인트:**
