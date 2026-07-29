@@ -340,9 +340,8 @@ $$\text{Loss}(a_1, \dots, a_N, y) = -\log(a_j) \quad (\text{단, } y=j\text{ 일
 기존의 이진 분류 모델(출력 노드 1개)을 10개 숫자($0 \sim 9$)를 인식하는 다중 클래스 분류 모델로 확장하려면 **출력층의 노드 수를 10개로 변경**하고 **Softmax 활성화 함수**를 적용합니다.
 
 ```
-[Input X] ---> [Hidden 1: 25 Units (ReLU)] ---> [Hidden 2: 15 Units (ReLU)] ---> [Output Layer: 10 Units (Softmax)]
-                                                                                     │
-                                                                                     └──> Outputs: a_1, a_2, ..., a_10
+[Input X] ---> [Hidden 1: 25 Units (ReLU)] ---> [Hidden 2: 15 Units (ReLU)]
+---> [Output Layer: 10 Units (Softmax)] ->Outputs: a_1, a_2, ..., a_10
 ```
 
 - **출력값**: $a_1, a_2, \dots, a_{10}$ 은 각각 입력 데이터 $x$가 $0, 1, \dots, 9$일 확률을 의미합니다.
