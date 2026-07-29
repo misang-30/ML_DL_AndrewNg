@@ -182,7 +182,7 @@ L(f(\mathbf{x}), y) = \begin{cases}
 ```
 
 
-![[Pasted image 20260721132927.png]]
+![](Pasted image 20260721132927.png)
 
 ##### 실제 정답 $y = 1$ 인 경우
 
@@ -207,7 +207,7 @@ J(\mathbf{w}, b) = \frac{1}{m} \sum_{i=1}^{m} L(f(\mathbf{x}^{(i)}), y^{(i)})
 
 - 이 손실 함수를 합쳐서 만든 비용 함수 $J(\mathbf{w}, b)$는 **매끄러운 Convex 형태**를 띠게 되므로, 경사 하강법을 사용하면 **항상 전역 최저점(Global Minimum)을 안전하게 찾을 수 있음이 보장**됩니다.
 
-![[Pasted image 20260721131134.png]]
+![](Pasted image 20260721131134.png)
 
 ---
 ---
