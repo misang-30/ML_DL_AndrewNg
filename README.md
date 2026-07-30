@@ -59,7 +59,8 @@ https://github.com/TouradBaba/deep-learning-specialization-coursera
 
 ## 3. 순서
 - 1.강의 내용 정리, 학습, 요약
-- 2.강의에서 제공하는 Lab 코드 실습
+- 2.따로 책 찾아서 실습. 프로그램의 흐름을 복기하면서 분석하고 곱씹어라.
+- 3.강의에서 제공하는 랩은 읽어볼 것.
 
 ---
 
