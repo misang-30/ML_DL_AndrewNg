@@ -64,5 +64,12 @@
 ---
 
 ## 4.레퍼런스
+### 강의
 - https://www.deeplearning.ai/specializations/machine-learning?utm_campaign=mls-video-series&utm_medium=video&utm_source=youtube#course-slides
 
+### 강의 자료 
+#### (1).머신러닝
+- https://github.com/pmulard/machine-learning-specialization-andrew-ng/blob/main/notes/Recommender_Systems.pdf
+
+#### (2).딥러닝
+- https://aaronnotes.com/deeplearning-notes/
