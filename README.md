@@ -6,7 +6,7 @@
 
 
 ---
-https://github.com/TouradBaba/deep-learning-specialization-coursera
+
 ## 1.ML 커리큘럼
 ### Course1  : Supervised Machine Learning: Regression and Classification
 - Week 1: Introduction to Machine Learning (2시간)
