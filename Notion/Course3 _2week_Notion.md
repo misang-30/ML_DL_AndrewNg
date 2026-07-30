@@ -1,6 +1,3 @@
-업로드해 주신 PDF 문서를 바탕으로 깔끔하게 정리한 **한글 마크다운(Markdown) 요약 노트**입니다.
-
----
 
 # 추천 시스템 (Recommender Systems)
 
