@@ -1,6 +1,6 @@
 ## 0. 파일
 - Notion(ML이다), DL : 앤드류 응의 강의 정리
-- ML_map, DL_map : ML과 DL에 있는 모든 것을 정리하는 것이 목표.
+- ML_map, DL_map : ML과 DL을 전반적으로 정리하는 것이 목표.
 - lib_md : 사전 학습이 필요한 라이브러리와 파이썬
 - PythonEx : 파이썬 문법 예제(리마인드용)
 
