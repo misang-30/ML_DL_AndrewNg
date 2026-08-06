@@ -19,11 +19,11 @@
     
     - **입력 행렬 $X$:** 모든 입력 벡터를 열(Column) 방향으로 쌓은 행렬
         
-        $$X = \begin{bmatrix} \vert{} & \vert{} & & \vert{} \\ x^{(1)} & x^{(2)} & \dots & x^{(m)} \\ \vert{} & \vert{} & & \vert{} \end{bmatrix} \in \mathbb{R}^{n_x \times m}$$
+$$X = \begin{bmatrix} \vert{} & \vert{} & & \vert{} \\ x^{(1)} & x^{(2)} & \dots & x^{(m)} \\ \vert{} & \vert{} & & \vert{} \end{bmatrix} \in \mathbb{R}^{n_x \times m}$$
         
     - **정답 레이블 행렬 $Y$:**
         
-        $$Y = \begin{bmatrix} y^{(1)} & y^{(2)} & \dots & y^{(m)} \end{bmatrix} \in \mathbb{R}^{1 \times m}$$
+$$Y = \begin{bmatrix} y^{(1)} & y^{(2)} & \dots & y^{(m)} \end{bmatrix} \in \mathbb{R}^{1 \times m}$$
         
 
 ## 2. 로지스틱 회귀 (Logistic Regression)
@@ -153,12 +153,33 @@ $$A^{[l]} = g^{[l]}(Z^{[l]})$$
 
 ### **행렬 변환 방식**
 
-- $X = A^{[0]} = \begin{bmatrix} \vert{} & \vert{} & & \vert{} \\ x^{(1)} & x^{(2)} & \dots & x^{(m)} \\ \vert{} & \vert{} & & \vert{} \end{bmatrix}$
-    
-- $Z^{[l]} = \begin{bmatrix} \vert{} & \vert{} & & \vert{} \\ z^{[l](1)} & z^{[l](2)} & \dots & z^{[l](m)} \\ \vert{} & \vert{} & & \vert{} \end{bmatrix}$
-    
-- $A^{[l]} = \begin{bmatrix} \vert{} & \vert{} & & \vert{} \\ a^{[l](1)} & a^{[l](2)} & \dots & a^{[l](m)} \\ \vert{} & \vert{} & & \vert{} \end{bmatrix}$
-    
+
+* **X = A[0] (입력 행렬)**
+
+```text
+X = A[0] = [ x(1)  x(2)  ...  x(m) ]
+```
+
+* **Z[l] (l번째 층의 선형 결합 결과)**
+
+```text
+Z[l] = [ z[l](1)  z[l](2)  ...  z[l](m) ]
+```
+
+* **A[l] (l번째 층의 활성화 결과)**
+
+```text
+A[l] = [ a[l](1)  a[l](2)  ...  a[l](m) ]
+```
+
+여기서 각 **열(column)** 은 하나의 학습 예제(sample)를 의미한다.
+
+* `X = A[0]` : 입력 행렬
+* `Z[l]` : l번째 층의 선형 변환 결과
+* `A[l]` : l번째 층의 활성화 함수 출력
+* `m` : 샘플 개수
+
+
 
 ### **벡터화된 순전파 일반식**
 
@@ -552,4 +573,3 @@ $$dA^{[L]} = \begin{bmatrix} -\frac{y^{(1)}}{a^{[L](1)}} + \frac{1-y^{(1)}}{1-a^
     
 - **뇌 과학의 영향:** 컴퓨터 비전(Computer Vision) 등 일부 분야가 초기 뇌의 시각 피질 작동 방식에서 영감을 얻기도 했으나, 기본적으로 딥러닝은 **수학, 선형대수학, 경사하강법 최적화**의 결합체입니다.
     
-
