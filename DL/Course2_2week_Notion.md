@@ -29,8 +29,8 @@ $$V_t = \beta V_{t-1} + (1 - \beta) \theta_t$$
 * **개념:** 과거 데이터의 영향을 지수적으로 감소시키며 노이즈를 줄이고 부드러운 추세선(Smooth Curve)을 만드는 기법.
 * **편향 보정 (Bias Correction):** 초반 $V_0 = 0$ 설정으로 인해 시작 지점이 0에 치우치는 현상을 막기 위해 $\frac{V_t}{1 - \beta^t}$ 로 보정합니다.
 
-- 이 점화식을 과거 방향으로 계속 풀어 쓰면 이유가 명확해집니다.  
-$$V_t = (1 - \beta)\theta_t + \beta(1 - \beta)\theta_{t-1} + \beta^2(1 - \beta)\theta_{t-2} + \beta^3(1 - \beta)\theta_{t-3} + \dots$$  
+- 이 점화식을 과거 방향으로 계속 풀어 쓰면 이유가 명확해집니다.
+$$V_t = (1 - \beta)\theta_t + \beta(1 - \beta)\theta_{t-1} + \beta^2(1 - \beta)\theta_{t-2} + \beta^3(1 - \beta)\theta_{t-3} + \dots$$
 - 현재값 $\theta_t$의 반영 비율: $(1 - \beta)$
 - 1단계 전 $\theta_{t-1}$의 반영 비율: $\beta(1 - \beta)$
 - 2단계 전 $\theta_{t-2}$의 반영 비율: $\beta^2(1 - \beta)$
@@ -98,9 +98,8 @@ $$W := W - \alpha \frac{V_{dW}^{corrected}}{\sqrt{S_{dW}^{corrected}} + \epsilon
 
 ## 4. 학습률 감쇠 (Learning Rate Decay)
 
-- 학습 초반에는 큰 학습률($\alpha$)로 성큼성큼 이동하다가, 최적점에 가까워질수록 $\alpha$를 줄여서 최적점 주변에서 맴돌지 않고 정밀하게 수렴시키는 기법입니다.
+학습 초반에는 큰 학습률($\alpha$)로 성큼성큼 이동하다가, 최적점에 가까워질수록 $\alpha$를 줄여서 최적점 주변에서 맴돌지 않고 정밀하게 수렴시키는 기법입니다.
 
-  
 $$
-\alpha = \frac{1}{1 + \text{decayRate} \times \text{epochNum}} \alpha_0
+\alpha = \frac{1}{1 + \text{decay rate} \times \text{epoch num}} \alpha_0
 $$
