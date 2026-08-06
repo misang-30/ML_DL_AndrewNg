@@ -1,144 +1,106 @@
 
+- 2주차의 핵심 주제는 "학습 속도 향상(Optimization Algorithms)"입니다. 
+- 기본 경사 하강법(Batch Gradient Descent)의 한계를 극복하고 학습 속도를 몇 배 이상 올려주는 기법들을 다룹니다.
 
-기본 경사하강법(Gradient Descent)의 한계를 극복하고 학습 속도를 비약적으로 향상시키는 **최신 최적화 알고리즘 및 테크닉**을 다룹니다.
+
+---
 
 ## 1. 미니배치 경사하강법 (Mini-batch Gradient Descent)
 
-전체 데이터셋($m$)을 작은 묶음인 미니배치(Mini-batch) $X^{{t}}, Y^{{t}}$로 나누어 학습을 진행하는 기법입니다.
+전체 데이터 $m$개를 한 번에 처리하는 **Batch** 방식은 데이터가 수십만~수백만 개일 때 1회 업데이트 조차 너무 오래 걸립니다.
 
-### **배치(Batch) vs 미니배치(Mini-batch) vs 확률적(Stochastic) 비교**
+* **동작 원리:** 전체 데이터를 $X^{{1}}, X^{{2}}, \dots, X^{{t}}$처럼 작은 묶음(예: 64, 128, 256, 512개)으로 나눕니다.
+* **학습 방식:** 1개의 미니배치($X^{\{t\}}$)를 통과시킬 때마다 즉시 가중치($W, b$)를 업데이트합니다.
+* **Epoch 정의:** 전체 데이터셋($m$개)을 1번 완전히 통과하는 과정. (1 Epoch 동안 미니배치 개수만큼 파라미터 업데이트 발생)
+* **배치 크기(Batch Size) 선택 팁:**
+	* **$m \le 2000$ (소규모):** 그냥 Batch Gradient Descent ($Batch Size = m$) 사용.
+	* **$m > 2000$ (대규모):** Mini-batch 사용 ($64, 128, 256, 512$ 등 **$2^n$ 단위** 사용 - GPU 메모리 효율 최적화).
 
-- **배치 경사하강법 (Batch GD):** 미니배치 크기 = $m$
-    
-    - 전체 데이터를 다 본 후 1번 업데이트. $m$이 매우 크면 1스텝에 오랜 시간 소요.
-        
-- **확률적 경사하강법 (Stochastic GD):** 미니배치 크기 = $1$
-    
-    - 데이터 1개마다 업데이트. 벡터화(Vectorization)의 연산 이점을 잃고 진동이 매우 심함.
-        
-- **미니배치 경사하강법 (Mini-batch GD):** 미니배치 크기 = $1 < \text{size} < m$
-    
-    - 벡터화 이점을 살리면서도 1개의 epoch 동안 여러 번 파라미터 업데이트 가능.
-        
-
-### **미니배치 크기 선택 가이드라인**
-
-- **$m \le 2000$ (소규모 데이터):** 배치 경사하강법(Batch GD) 권장.
-    
-- **일반적인 미니배치 크기:** **64, 128, 256, 512** (CPU/GPU 메모리 구조상 $2^n$ 크기가 연산 최적화에 유리).
-    
-- **주의사항:** 미니배치 $X^{{t}}, Y^{{t}}$가 CPU/GPU 메모리에 한 번에 올라가는 크기여야 함.
-    
+---
 
 ## 2. 지수 가중 이동 평균 (Exponentially Weighted Averages)
+- 경사하강법(SGD)을 쓸 때 기울기가 튀고 흔들리는 노이즈를 부드럽게 정돈해주기 위해 도입했다.
 
-최근 데이터에 더 높은 가중치를 주어 유동적인 데이터의 경향성(Trend)을 매끄럽게 다듬는 통계 기법입니다. (Momentum, RMSprop, Adam의 기본 원리)
+- 고급 최적화 알고리즘(Momentum, RMSprop)의 수학적 기반이 되는 핵심 개념입니다.
 
-### **기본 수식**
+$$V_t = \beta V_{t-1} + (1 - \beta) \theta_t$$
 
-$$v_t = \beta v_{t-1} + (1 - \beta) \theta_t$$
+* **$\beta$ (Hyperparameter):** 보통 $0.9$ 사용 (최근 약 $\frac{1}{1-\beta} = 10$일간의 데이터를 평균 내는 효과).
+* **개념:** 과거 데이터의 영향을 지수적으로 감소시키며 노이즈를 줄이고 부드러운 추세선(Smooth Curve)을 만드는 기법.
+* **편향 보정 (Bias Correction):** 초반 $V_0 = 0$ 설정으로 인해 시작 지점이 0에 치우치는 현상을 막기 위해 $\frac{V_t}{1 - \beta^t}$ 로 보정합니다.
 
-- $\beta$ **(하이퍼파라미터):** 과거 데이터 영향력 결정. 대략 최근 $\frac{1}{1-\beta}$일간의 데이터를 평균 낸 효과.
-    
-    - $\beta = 0.9 \approx$ 최근 **10일** 평균 (적절히 매끄러움)
-        
-    - $\beta = 0.98 \approx$ 최근 **50일** 평균 (더 매끄럽지만 시차/지연 발생)
-        
-- **편향 보정 (Bias Correction):**
-    
-    초기값 $v_0 = 0$ 설정 때문에 초기 구간 추정치가 0 방향으로 왜곡(편향)되는 현상을 방지합니다.
-    
-    $$v_t^{\text{corrected}} = \frac{v_t}{1 - \beta^t}$$
-    
-    _(t가 커질수록 $1-\beta^t \approx 1$이 되어 초기 단계 이후에는 보정 효과가 자연스럽게 사라짐)_
-    
+- 이 점화식을 과거 방향으로 계속 풀어 쓰면 이유가 명확해집니다.  
+$$V_t = (1 - \beta)\theta_t + \beta(1 - \beta)\theta_{t-1} + \beta^2(1 - \beta)\theta_{t-2} + \beta^3(1 - \beta)\theta_{t-3} + \dots$$  
+- 현재값 $\theta_t$의 반영 비율: $(1 - \beta)$
+- 1단계 전 $\theta_{t-1}$의 반영 비율: $\beta(1 - \beta)$
+- 2단계 전 $\theta_{t-2}$의 반영 비율: $\beta^2(1 - \beta)$
+- $\beta$가 $1$보다 작으므로, **과거로 갈수록 $\beta^k$가 곱해져 가중치가 지수 함수(Exponential) 형태로 급격히 감소**합니다.
 
-## 3. 모멘텀 경사하강법 (Gradient Descent with Momentum)
+- **$\beta = 0.9$일 때**: $\frac{1}{1 - 0.9} = 10$
+    
+    -  최근 **약 10일간의 데이터**를 주로 반영하여 평균을 냅니다. 과거의 미세한 노이즈가 부드럽게 정돈됩니다.
+    
+- **$\beta = 0.98$일 때**: $\frac{1}{1 - 0.98} = 50$
+    
+    -  최근 **약 50일간의 데이터**를 반영합니다. 그래프가 훨씬 더 부드러워지지만, 최근 변화를 빠르게 반영하지 못하고 **지연(Lag)** 현상이 커집니다.
 
-경사하강법에 '관성(Momentum)'을 추가하여 최적화 경로를 가속하는 기법입니다.
 
-- **원리:** 수직 방향의 불필요한 진동(Oscillation)은 상쇄시키고, 수평 방향(목표점)으로의 진행 속도를 가속합니다.
-    
-- **알고리즘 (각 iteration $t$마다):**
-    
-    $$v_{dW} = \beta v_{dW} + (1 - \beta) dW$$
-    
-    $$v_{db} = \beta v_{db} + (1 - \beta) db$$
-    
-    $$W := W - \alpha v_{dW}, \quad b := b - \alpha v_{db}$$
-    
-- **하이퍼파라미터 추천:** $\beta = 0.9$ (가장 널리 쓰이며 관습적인 기본값)
-    
 
-## 4. RMSprop (Root Mean Square Prop)
 
-경사하강법의 진동을 제어하기 위해 **기울기의 제곱 평균**을 나누어주는 기법입니다.
+---
 
-- **원리:** 기울기가 커서 크게 진동하는 축은 학습률을 줄이고, 기울기가 작아 천천히 움직이는 축은 상대적으로 학습률을 유지/가속합니다.
-    
-- **알고리즘:**
-    
-    $$S_{dW} = \beta_2 S_{dW} + (1 - \beta_2) (dW)^2 \quad (\text{element-wise 제곱})$$
-    
-    $$S_{db} = \beta_2 S_{db} + (1 - \beta_2) (db)^2$$
-    
-    $$W := W - \alpha \frac{dW}{\sqrt{S_{dW}} + \epsilon}, \quad b := b - \alpha \frac{db}{\sqrt{S_{db}} + \epsilon}$$
-    
-    - $\epsilon$ ($10^{-8}$ 수준): 분모가 0이 되는 Zero Division 에러 방지용 아주 작은 값.
-        
+## 3. 고급 최적화 알고리즘 (Optimization Algorithms)
 
-## 5. Adam 최적화 알고리즘 (Adam Optimization Algorithm)
+### 1). Momentum (관성)
+- 기울기의 이동 평균을 구해서 관성(속도)을 붙여줍니다.
+- 기존 경사하강법에 **물리학의 관성(가속도)** 개념을 더해, 경사하강법의 좌우 진동을 줄이고 목적지로 빠르게 가속합니다.
 
-**Momentum + RMSprop**을 결합한 알고리즘으로, 현대 딥러닝에서 가장 널리 쓰이고 뛰어난 성능을 보이는 하이퍼파라미터 최적화 알고리즘입니다.
+$$V_{dW} = \beta V_{dW} + (1 - \beta) dW$$
 
-### **알고리즘 단계**
+$$W := W - \alpha V_{dW}$$
 
-1. **Momentum (1차 모멘트):** $v_{dW} = \beta_1 v_{dW} + (1 - \beta_1) dW$
-    
-2. **RMSprop (2차 모멘트):** $S_{dW} = \beta_2 S_{dW} + (1 - \beta_2) (dW)^2$
-    
-3. **편향 보정 (Bias Correction):**
-    
-    $$v_{dW}^{\text{corrected}} = \frac{v_{dW}}{1 - \beta_1^t}, \quad S_{dW}^{\text{corrected}} = \frac{S_{dW}}{1 - \beta_2^t}$$
-    
-4. **파라미터 업데이트:**
-    
-    $$W := W - \alpha \frac{v_{dW}^{\text{corrected}}}{\sqrt{S_{dW}^{\text{corrected}}} + \epsilon}$$
-    
+* **특징:** 지그재그 방향의 기울기는 서로 상쇄되어 줄어들고, 최적점을 향한 방향의 기울기는 누적되어 속도가 빨라집니다. ($\beta = 0.9$ 권장)
 
-### **권장 하이퍼파라미터 기본값**
 
-- $\alpha$: **튜닝 필요** (학습률)
-    
-- $\beta_1 = 0.9$ (Momentum용)
-    
-- $\beta_2 = 0.999$ (RMSprop용)
-    
-- $\epsilon = 10^{-8}$
-    
 
-## 6. 학습률 감쇠 (Learning Rate Decay)
 
-학습 초기에는 큰 학습률($\alpha$)로 빠르게 이동하고, 최적점 근처에 도달할수록 학습률을 점차 줄여 미세하게 최적점으로 수렴시키는 기법입니다.
+### 2). RMSprop (Root Mean Square Prop)
+- 기울기 제곱의 이동 평균을 구해서 보폭(Learning Rate)을 조절합니다.
+- 기울기가 가파른 방향(진동이 심한 축)의 업데이트는 줄이고, 기울기가 완만한 방향의 업데이트는 키워 균형을 맞춥니다.
 
-### **주요 감쇠 공식**
+$$S_{dW} = \beta_2 S_{dW} + (1 - \beta_2) dW^2$$
 
-- **기본 감쇠 (Standard Decay):**
-    
-    $$\alpha = \frac{1}{1 + \text{decay\_rate} \times \text{epoch\_num}} \alpha_0$$
-    
-- **지수 감쇠 (Exponential Decay):** $\alpha = 0.95^{\text{epoch\_num}} \alpha_0$
-    
-- **기타 방식:** $\alpha = \frac{k}{\sqrt{\text{epoch\_num}}} \alpha_0$, 계단식 감쇠(Discrete Staircase Decay), 수동 감쇠(Manual Decay) 등.
-    
+$$W := W - \alpha \frac{dW}{\sqrt{S_{dW}} + \epsilon}$$
 
-## 7. 국소 최적점 문제 (The Problem of Local Optima)
+* **특징:** $dW$가 크면 $S_{dW}$도 커져서 나누는 분모가 커지므로 업데이트 폭이 줄어듭니다. ($\epsilon = 10^{-8}$ 은 0 나누기 방지용)
 
-고차원 딥러닝 공간에서의 기울기 0 지점들에 대한 오해와 진실을 설명합니다.
+### 3).Adam (Adaptive Moment Estimation) 
+- 위 둘(Momentum + RMSprop)을 합친 뒤, 편향 보정(Bias Correction)까지 적용한 알고리즘입니다.
+- **Momentum + RMSprop**을 결합한 알고리즘으로, 현재 딥러닝에서 **가장 널리 쓰이는 표준 Optimizer**입니다.
 
-- **안장점 (Saddle Points):** 고차원 공간에서 기울기가 0인 지점은 지역 최적점(Local Optima)이 아니라 대부분 안장점(Saddle Point)입니다. (일부 차원은 극소, 일부 차원은 극대)
-    
-- **평탄한 지역 (Plateaus):** 기울기가 0에 매우 가까운 평지 구간이 존재하여 경사하강법의 학습 속도를 매우 느리게 만듭니다.
-    
-- **해결책:** **Momentum, RMSprop, Adam** 기법은 안장점이나 평탄한 지역(Plateaus)의 완만한 경사에서 빠져나오는 데 탁월한 효과를 발휘합니다.
-    
+1. Momentum 계산: $V_{dW} = \beta_1 V_{dW} + (1 - \beta_1) dW$
+2. RMSprop 계산: $S_{dW} = \beta_2 S_{dW} + (1 - \beta_2) dW^2$
+3. 편향 보정 후 업데이트:
+
+$$W := W - \alpha \frac{V_{dW}^{corrected}}{\sqrt{S_{dW}^{corrected}} + \epsilon}$$
+
+
+
+* **하이퍼파라미터 권장 기본값:**
+* $\alpha$: 튜닝 필요
+* $\beta_1$ (Momentum용): $0.9$
+* $\beta_2$ (RMSprop용): $0.999$
+* $\epsilon$: $10^{-8}$
+
+
+
+---
+
+## 4. 학습률 감쇠 (Learning Rate Decay)
+
+- 학습 초반에는 큰 학습률($\alpha$)로 성큼성큼 이동하다가, 최적점에 가까워질수록 $\alpha$를 줄여서 최적점 주변에서 맴돌지 않고 정밀하게 수렴시키는 기법입니다.
+
+  
+$$
+\alpha = \frac{1}{1 + \text{decayRate} \times \text{epochNum}} \alpha_0
+$$
