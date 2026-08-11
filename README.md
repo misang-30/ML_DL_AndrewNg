@@ -75,4 +75,4 @@
 
 #### (2).딥러닝
 - https://aaronnotes.com/deeplearning-notes/
-- 랩자료 https://github.com/TouradBaba/deep-learning-specialization-coursera
+- 랩자료 https://github.com/abdur75648/Deep-Learning-Specialization-Coursera/tree/main/Neural%20Networks%20and%20Deep%20Learning/Week2/Logistic%20Regression%20as%20a%20Neural%20Network
