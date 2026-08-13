@@ -1,85 +1,123 @@
 
+2주차의 핵심 주제는 "자연어 처리: 단어 임베딩(Natural Language Processing: Word Embeddings)"입니다. 1주차에서 단어를 단순히 `0`과 `1`로만 채운 원-핫 벡터로 표현했던 한계를 극복하고, **단어의 '의미와 관계'를 다차원 공간의 좌표(벡터)로 변환하는 핵심 기술**을 배웁니다.
 
-Week 2에서는 단어를 컴퓨터가 이해할 수 있는 의미 있는 밀집 벡터(Dense Vector)로 표현하는 **단어 임베딩(Word Embedding)** 기술과 대표적인 알고리즘(**Word2Vec, GloVe**), 그리고 이를 활용한 **감성 분석** 및 **편향(Bias) 제거 기법**을 배웁니다.
+---
 
-## 1. 단어 표현과 임베딩 (Word Representation)
+## 1. 단어 표현: 단어 임베딩 (Word Embeddings)
 
-### **1) One-Hot Encoding의 한계**
+### 원-핫 인코딩의 치명적인 한계
 
-- 단어를 $V$ 크기의 원-핫 벡터로 표현하면, 두 단어 벡터 간의 내적(Inner Product)이 항상 0이 됩니다.
-    
-- 즉, `Apple`과 `Orange`가 비슷한 과일이라는 의미적 유사성(Semantic Similarity)을 모델이 전혀 학습하지 못합니다.
-    
+1주차에서 배운 원-핫 벡터(One-hot Vector)는 단어 간의 관계를 전혀 표현하지 못합니다.
 
-### **2) 단어 임베딩 (Word Embedding)**
+* 예: `Orange` 벡터와 `Apple` 벡터를 내적(Dot Product)하면 결과는 `0`입니다. `King`과 `Queen`을 내적해도 `0`입니다.
+* 컴퓨터 입장에서는 사과와 오렌지가 가까운 과일 종류라는 사실을 알 방법이 없으며, "I want a glass of **orange** juice"라는 문장을 학습했어도 "I want a glass of **apple** [ ]" 문장의 빈칸에 `juice`가 들어갈 확률을 예측하기 어렵습니다.
 
-- 단어를 고차원(예: 300차원)의 연속적인 수치 공간에 매핑합니다.
-    
-- 성별, 나이, 음식, 고유명사 등의 의미적 특성(Feature)이 각 차원에 녹아들어, 유사한 의미를 가진 단어끼리 **벡터 공간상에서 가까운 거리**에 위치하게 됩니다.
-    
+### 특징 기반 표현 (Featurized Representation)
 
-### **3) 임베딩의 유사도 및 유짚 연산 (Analogy Reasoning)**
+단어 임베딩은 단어마다 수십~수백 개의 고차원 특징(Feature) 점수를 부여하여 벡터로 만드는 것입니다.
 
-- **유사도 측정 (Cosine Similarity):**
-    
-    $$\text{Sim}(u, v) = \frac{u^T v}{\vert{}\vert{}u\vert{}\vert{}_2 \vert{}\vert{}v\vert{}\vert{}_2}$$
-    
-- **유짚 연산 (Vector Analogies):**
-    
-    "Man이 Woman이면, King은 무엇인가?"라는 질문을 벡터 연산으로 해결합니다:
-    
-    $$e_{\text{man}} - e_{\text{woman}} \approx e_{\text{king}} - e_{\text{queen}}$$
-    
+| 특징 (Features) | Apple | Orange | King | Queen | ... |
+| --- | --- | --- | --- | --- | --- |
+| **Gender (성별)** | 0.00 | 0.01 | -0.95 | 0.96 | ... |
+| **Royal (왕족)** | 0.00 | 0.00 | 0.93 | 0.95 | ... |
+| **Food (음식)** | 0.95 | 0.97 | 0.02 | 0.01 | ... |
 
-## 2. 단어 임베딩 학습 알고리즘 (Word2Vec & GloVe)
+* 이제 `Apple`과 `Orange`는 Food 특징에서 높은 유사도를 가지며, `King`과 `Queen`은 Royal 특징에서 강한 연관성을 가집니다.
+* 보통 이 특징의 개수(차원)를 $D=300$ 정도로 설정하며, 이 고차원 밀집 벡터(Dense Vector)를 단어 임베딩(Word Embedding)이라고 부릅니다.
+* *참고: 실제 학습된 임베딩 벡터의 각 차원이 '성별', '음식'처럼 사람이 이해할 수 있는 개념으로 딱 떨어지지는 않으며, 모델이 스스로 찾아낸 고차원의 추상적인 특징들로 채워집니다.*
 
-### **1) Word2Vec: Skip-Gram 모델**
+---
 
-중심 단어(Target Word, $c$)가 주어졌을 때 주변 문맥 단어(Context Word, $t$)가 나타날 확률을 예측하도록 학습합니다.
+## 2. 단어 임베딩의 마법: 단어 유추 (Word Analogies)
 
-- **Softmax 확률 식:**
-    
-    $$P(t\vert{}c) = \frac{\exp(\theta_t^T e_c)}{\sum_{w=1}^{\vert{}V\vert{}} \exp(\theta_w^T e_c)}$$
-    
-- **문제점:** 분모에서 전체 어휘 사전 $\vert{}V\vert{}$에 대해 합을 구해야 하므로 연산량이 매우 큽니다.
-    
+단어 임베딩 공간에서는 재미있고 강력한 수학적 연산이 가능해집니다. 가장 유명한 예시가 바로 "왕(King) - 남성(Man) + 여성(Woman) = 여왕(Queen)"입니다.
 
-### **2) Negative Sampling (부정 음영 샘플링)**
+### 유추 연산의 원리
 
-Softmax의 무거운 연산량을 극복하기 위해, 문제를 **이진 분류(Binary Classification)** 문제로 전환합니다.
+* $e_{\text{king}} - e_{\text{man}}$ 벡터를 구하면 '성별' 특징은 사라지고 '왕족(Royal)'이라는 의미적 방향 벡터만 남게 됩니다.
+* 여기에 $e_{\text{woman}}$ 벡터를 더하면, 여성이면서 왕족인 단어의 위치로 이동하게 됩니다.
+* **코사인 유사도(Cosine Similarity):** 컴퓨터는 임베딩 공간 속 수만 개의 단어 벡터 중, 위 연산 결과 벡터($e_{\text{king}} - e_{\text{man}} + e_{\text{woman}}$)와 **방향이 가장 일치하는(코사인 유사도가 가장 높은)** 단어를 검색하며, 이때 높은 확률로 `Queen`이 매칭됩니다.
 
-- 1개의 진짜 (Context, Target) 쌍 $\rightarrow$ Label 1
-    
-- $K$개의 무작위 가짜 (Context, Random Word) 쌍 $\rightarrow$ Label 0
-    
-- 매 단계마다 전체 사전을 연산하는 대신 $K+1$개의 이진 분류 문제만 풀어 연산 속도를 획기적으로 향상시킵니다.
-    
+$$\text{Cosine Similarity}(u, v) = \frac{u \cdot v}{\Vert{}u\Vert{}_2 \Vert{}v\Vert{}_2}$$
 
-### **3) GloVe (Global Vectors for Word Representation)**
+---
 
-단어 간 동시 등장 횟수(Co-occurrence Matrix, $X_{ij}$)를 전역적으로 활용하여 임베딩을 학습합니다.
+## 3. 임베딩 행렬 (Embedding Matrix)
 
-$$\text{Cost} = \sum_{i=1}^{\vert{}V\vert{}} \sum_{j=1}^{\vert{}V\vert{}} f(X_{ij}) \left( \theta_i^T e_j + b_i + b_j' - \log X_{ij} \right)^2$$
+단어 임베딩을 신경망 연산에 적용할 때는 임베딩 행렬 $E$를 사용합니다.
 
-## 3. 감성 분석 (Sentiment Analysis)
+* 사전(Vocabulary)의 크기가 10,000개이고, 임베딩 차원이 300차원이라면 행렬 $E$의 크기는 $300 \times 10,000$입니다.
+* 어떤 단어의 원-핫 벡터 $o_j$를 임베딩 행렬 $E$와 곱하면, 해당 단어에 대응하는 300차원의 열 벡터 $e_j$가 쏙 뽑아져 나옵니다. ($E \times o_j = e_j$)
+* *실전 팁: 실제 코드 구현(Keras, PyTorch 등) 시에는 행렬 곱셈을 하면 연산 낭비가 심하므로, 단어의 인덱스 번호를 넘겨서 행렬의 해당 열을 바로 조회하는 고속 룩업(Lookup) 함수를 사용합니다.*
 
-텍스트(리뷰, 트윗 등)를 입력받아 긍정/부정 정도나 별점을 예측하는 과제입니다.
+---
 
-- **Simple Averaging Model:** 모든 단어의 임베딩 벡터를 평균 낸 뒤 Softmax 분류기에 전달 (단어 순서를 무시한다는 단점 존재).
-    
-- **RNN-based Model:** Many-to-One 아키텍처를 적용하여 단어의 순서와 문맥("Not good"과 같은 부정 표현)을 반영하여 분류.
-    
+## 4. Word2Vec 알고리즘 (Skip-gram & CBOW)
 
-## 4. 임베딩의 편향 제거 (Debiasing Word Embeddings)
+그렇다면 이 마법 같은 임베딩 행렬 $E$의 가중치들은 어떻게 학습시킬까요? 토마스 미콜로프(Tomas Mikolov)가 제안한 **Word2Vec**의 대표적인 방식인 **Skip-gram** 모델을 중심으로 배웁니다.
 
-학습 데이터(인터넷 텍스트 등)에 존재하는 성별, 인종, 종교 등에 대한 편향(Bias)이 임베딩 공간에 그대로 반영되는 문제가 있습니다 (예: $\text{Man} : \text{Computer Programmer} \approx \text{Woman} : \text{Homemaker}$).
+### Skip-gram 모델의 메커니즘
 
-### **편향 제거 3단계 과정**
+문맥 속에서 **"중심 단어(Context)"를 보고 주변에 올 "타깃 단어(Target)"를 예측**하는 인공지능 문제를 강제로 만들어 학습시키는 방식입니다.
 
-1. **Bias Direction 식별:** 성별 단어쌍들($e_{\text{he}} - e_{\text{she}}$, $e_{\text{male}} - e_{\text{female}}$)의 차이를 평균 내어 편향축(Bias Axis)을 구합니다.
-    
-2. **Neutralize (중립화):** 편향과 무관해야 하는 단어들(Doctor, Programmer, Nurse 등)을 편향축에 직교(Orthogonal)하도록 투영하여 성별 성분을 제거합니다.
-    
-3. **Equalize (균등화):** 성별 고유 단어쌍(Grandfather-Grandmother, Boy-Girl 등)이 중립 단어들로부터 동일한 거리를 갖도록 거리를 맞춥니다.
-    
+* 예문: `"I want a glass of orange juice to go."`
+* 'orange'를 중심 단어(c)로 무작위 선택했다면, 일정 거리(Window Size) 내에 있는 'juice'나 'glass' 등을 타깃 단어(t)로 설정합니다.
+* **신경망 연산:** 중심 단어 벡터 $e_c$에 가중치를 곱해 타깃 단어 $t$가 될 확률을 Softmax 함수로 계산합니다.
 
+$$P(t\vert{}c) = \frac{\exp(\theta_t^T e_c)}{\sum_{j=1}^{V} \exp(\theta_j^T e_c)}$$
+
+* **문제점:** Softmax의 분모를 보면 사전 안에 있는 모든 단어($V=10,000$개에서 수십만 개)에 대해 지수 연산을 하고 더해야 합니다. 매 스텝마다 이 짓을 반복하므로 계산 속도가 무지막지하게 느려집니다.
+
+---
+
+## 5. 계산 지옥의 해결책: 네거티브 샘플링 (Negative Sampling)
+
+Word2Vec을 실용화 가능하게 만든 혁신적인 기법입니다. 거대한 Softmax 문제를 **단순한 이진 분류(Logistic Regression) 문제 여러 개**로 쪼개어 해결합니다.
+
+### 데이터셋 새로 짜기 (지도학습 형태로 변환)
+
+1. **Positive Sample:** 실제 문맥에서 같이 등장한 단어 쌍을 가져오고 레이블을 `1`로 줍니다. (예: `(orange, juice) -> 1`)
+2. **Negative Sample:** 중심 단어는 그대로 두고, **사전에서 무작위로 아무 단어나 $k$개(보통 5~20개)를 뽑아서** 짝을 짓고 레이블을 `0`으로 줍니다. 실제 문맥과 전혀 상관없는 무작위 단어이므로 배경(배제할 단어) 역할을 합니다. (예: `(orange, king) -> 0`, `(orange, book) -> 0`)
+
+### 연산의 이점
+
+이제 모델은 전체 단어를 뒤질 필요 없이, 들어온 단어 쌍 $k+1$개에 대해서만 각각 시그모이드(Sigmoid) 연산을 수행하면 됩니다. 전체 분모를 계산하던 무거운 연산이 **딱 $k+1$개의 이진 분류 연산**으로 압축되므로 학습 속도가 수백 배 빨라집니다.
+
+---
+
+## 6. GloVe (Global Vectors for Word Representation)
+
+Word2Vec 외에 또 다른 강력한 임베딩 기법인 **GloVe**를 짤막하게 다룹니다.
+
+* **핵심 아이디어:** 전체 말뭉치(Corpus)에서 단어 $i$와 단어 $j$가 동시에 등장한 횟수를 세어 행렬 $X_{ij}$를 만듭니다.
+* **목적 함수:** 두 단어의 임베딩 벡터의 내적($\theta_i^T e_j$)이 두 단어가 동시 등장한 빈도의 로그 값($\log X_{ij}$)과 최대한 가까워지도록 전역적인 통계치를 직접 최적화합니다. Word2Vec 못지않게 직관적이며 연산 효율이 좋습니다.
+
+---
+
+## 7. 감성 분류 응용 예시 (Sentiment Classification)
+
+학습된 단어 임베딩을 활용하여 텍스트의 긍정/부정을 분류하는 모델을 설계합니다.
+
+* **간단한 모델 (A simple architecture):** 문장 속 단어들의 임베딩 벡터를 사전에서 다 찾아온 뒤, 그 벡터들의 **평균(Average)** 혹은 합을 구합니다. 이 평균 벡터를 곧바로 Softmax 층에 넘겨 분류합니다.
+* *문제점:* 단어의 순서를 무시하기 때문에 `"Completely lacking in good taste, good service, and good ambiance"` (좋은 맛, 서비스, 분위기가 전혀 없다)라는 문장에서 `good`이 3번 나왔다는 이유로 긍정으로 오분류할 위험이 큽니다.
+
+
+* **RNN 기반 모델:** 문장 속 단어 임베딩 벡터들을 1주차에서 배운 RNN(또는 LSTM)에 순서대로 밀어 넣습니다. 마지막 시점($T_x$)의 은닉 상태 출력을 Softmax에 연결하면 단어의 순서와 문맥을 완벽히 보존한 고성능 감성 분류기가 완성됩니다.
+
+---
+
+## 8. 임베딩의 편향 문제 (Debiasing Word Embeddings)
+
+머신러닝 모델은 인간이 쓴 글(텍스트 데이터)을 보고 배우기 때문에, 인간 사회의 성별, 인종, 종교적 편향(Bias)을 그대로 흡수하는 치명적인 부작용이 있습니다.
+
+* 예: 학습된 모델에게 유추 연산을 시켰더니 `"Man : Computer Programmer = Woman : Homemaker(주부)"`, 또는 `"Father : Doctor = Mother : Nurse"` 같은 고정관념이 가득 찬 답변을 도출해 냅니다.
+
+### 앤드류 응 교수가 제시하는 3단계 편향 제거(Debiasing) 알고리즘
+
+1. **편향 방향 식별 (Identify bias direction):** `He - She`, `Male - Female` 등 성별을 나타내는 단어들의 차이를 평균 내어 임베딩 공간 속 '성별 축(Gender Direction)'을 찾아냅니다. 그리고 이 축과 수직을 이루는 '무관계 축(Orthogonal Direction)'을 정의합니다.
+2. **중립화 (Neutralization):** 의사(Doctor), 프로그래머(Programmer)처럼 성별과 무관해야 하는 중립 단어들을 1단계에서 찾은 성별 축에서 완전히 분리(투영, Projection)시켜, 성별 축 기준 점수를 0으로 만들어 버립니다.
+3. **균등화 (Equalization):** `Grandfather`와 `Grandmother`, 또는 `Boy`와 `Girl`처럼 성별 차이가 정당하게 존재해야 하는 단어 쌍의 경우, 중립 단어(예: 주부, 의사)로부터의 거리가 **정확히 동등하도록** 양쪽 벡터의 위치를 미세 조정합니다.
+
+---
+
+2주차는 텍스트라는 추상적인 개념을 **어떻게 인공지능이 가장 잘 요리할 수 있는 '의미론적 기하학 공간(임베딩)'으로 변환하고, 이를 가볍고 빠르게 학습(네거티브 샘플링)시키며, 나아가 인공지능의 윤리적 문제(편향 제거)까지 다루는가**를 완성도 있게 보여주는 주차입니다. 이 개념을 다지면 현대 거대 언어 모델(LLM)의 핵심인 토큰 처리 알고리즘의 기초를 완벽하게 정복하게 됩니다!
