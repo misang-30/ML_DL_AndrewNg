@@ -1,97 +1,109 @@
 
 
-Course 5의 마지막 주차에서는 기계 번역(Machine Translation)과 음성 인식(Speech Recognition)의 기반이 되는 **Seq2Seq 아키텍처**, 최적의 문장을 탐색하는 **Beam Search**, 기존 RNN의 한계를 극복한 **어텐션 메커니즘(Attention Mechanism)** 및 **Transformer의 초석**을 배웁니다.
+3주차의 핵심 주제는 "시퀀스 투 시퀀스 모델과 어텐션 메커니즘(Sequence-to-Sequence Models & Attention Mechanism)"입니다. 번역기나 음성 인식기처럼 **입력되는 문장의 길이와 출력되는 문장의 길이가 다를 때** 사용하는 고도화된 아키텍처를 배우고, 현대 생성형 AI(Transformer, LLM)의 핵심 모태가 된 **어텐션(Attention)** 기술의 원리를 깊이 있게 배웁니다.
 
-## 1. Sequence-to-Sequence (Seq2Seq) 기본 아키텍처
+---
 
-한 시퀀스(예: 한국어 문장)를 다른 시퀀스(예: 영어 문장)로 변환하는 아키텍처로, 인코더(Encoder)와 **디코더(Decoder)** 두 부분으로 구성됩니다.
+## 1. 시퀀스 투 시퀀스 (Seq2Seq) 기본 구조
 
-- **인코더 (Encoder):** 입력 시퀀스 $X^{\langle 1 \rangle}, \dots, X^{\langle T_x \rangle}$를 받아 전체 문맥을 요약한 고정 길이 벡터(Context Vector)로 압축합니다.
-    
-- **디코더 (Decoder):** 인코더가 넘겨준 문맥 벡터를 초기 상태로 입력받아, 출력 시퀀스 $Y^{\langle 1 \rangle}, \dots, Y^{\langle T_y \rangle}$를 한 단어씩 순차적으로 생성합니다.
-    
-- **이미지 캡셔닝 (Image Captioning):** 인코더로 CNN(AlexNet, ResNet 등)을 사용하여 이미지 특징을 추출한 뒤, 디코더 RNN에 넘겨 이미지를 설명하는 문장을 생성할 수 있습니다.
-    
+기계 번역(Machine Translation)처럼 `"Jane visits Africa in September"`(5단어)를 `"Jane visite l'Afrique en septembre"`(5단어이지만 언어에 따라 늘어나거나 줄어듦)로 바꿀 때 사용하는 구조입니다.
 
-## 2. 빔 탐색 (Beam Search)
+### 인코더-디코더 (Encoder-Decoder) 네트워크
 
-기계 번역 디코더에서 가장 확률이 높은 최적의 문장 $\hat{Y}$를 찾아내는 **조건부 언어 모델 탐색 알고리즘**입니다.
+네트워크는 크게 두 부분으로 나뉩니다.
 
-### **1) 왜 Greedy Search를 쓰지 않는가?**
+1. **인코더 (Encoder):** 입력 문장을 한 단어씩 읽어 나가는 RNN(주로 LSTM/GRU)입니다. 문장을 끝까지 다 읽으면, 문장 전체의 의미를 압축한 하나의 고정 크기 벡터인 콘텍스트 벡터(Context Vector)를 생성합니다.
+2. **디코더 (Decoder):** 인코더가 준 콘텍스트 벡터를 최초 입력($a^{\langle 0 \rangle}$)으로 받아, 번역된 첫 번째 단어를 예측합니다. 그리고 그 예측한 단어를 다음 시점의 입력으로 다시 집어넣으면서 문장 끝 토큰(`<EOS>`)이 나올 때까지 번역을 이어 나갑니다.
 
-매 타임스텝마다 가장 확률이 높은 단어 1개만 선택하는 탐색(Greedy Search)은 전체 문장 관점에서의 최적해(Global Optimum)를 보장하지 못합니다.
+> **이미지 캡셔닝(Image Captioning)으로의 응용:** 인코더 자리에 RNN 대신 **사전 학습된 CNN(예: VGG, ResNet)**을 넣고 마지막 FC 레이어 직전의 특징 벡터를 디코더(RNN)에 넘겨주면, 이미지를 보고 설명하는 문장을 생성하는 모델이 됩니다.
 
-### **2) 빔 탐색 작동 원리**
+---
 
-- **빔 크기 (Beam Width, $B$):** 매 단계마다 가장 확률이 높은 **$B$개의 후보 시퀀스**를 동시에 유지합니다 (예: $B=3$).
-    
-- **단계별 동작:**
-    
-    1. 첫 번째 단어로 가장 확률이 높은 $B$개 단어를 선택합니다.
-        
-    2. 선택된 $B$개 단어 각각에 대해 두 번째 단어가 올 확률을 계산하고, 가장 확률이 높은 상위 $B$개 조합을 선택합니다.
-        
-    3. `<EOS>`(문장 끝) 토큰이 나올 때까지 이 과정을 반복합니다.
-        
+## 2. 가장 가능성 높은 문장 찾기: 빔 서치 (Beam Search)
 
-### **3) 길이 정규화 (Length Normalization)**
+디코더가 번역 문장을 생성할 때, 매 시점마다 확률이 가장 높은 단어 1개만 무조건 선택하는 방식을 그리디 서치(Greedy Search)라고 합니다. 하지만 이는 뒤에 나올 문맥을 고려하지 못해 전체 문장 관점에서는 엉터리 번역을 만들 확률이 높습니다. 그렇다고 모든 단어의 조합을 다 계산하는 것은 불가능합니다. 그 타협점이 바로 **빔 서치**입니다.
 
-여러 단어의 확률을 계속 곱하면 $P(y^{\langle 1 \rangle}, \dots, y^{\langle T_y \rangle}\vert{}x) = \prod_{t=1}^{T_y} P(y^{\langle t \rangle}\vert{}x, y^{\langle <t \rangle})$ 값은 문장이 길어질수록 0에 가깝게 매우 작아집니다 (Underflow 발생).
+### 빔 서치의 메커니즘
 
-- **로그 변환 및 길이 정규화 수식:**
-    
-    $$\arg\max_Y \frac{1}{T_y^\alpha} \sum_{t=1}^{T_y} \log P(y^{\langle t \rangle} \vert{} x, y^{\langle <t \rangle})$$
-    
-    - $\alpha$ (보통 $0.7$ 수준): 짧은 문장만 선호하는 편향을 완화하는 하이퍼파라미터입니다.
-        
+빔 서치는 하이퍼파라미터인 빔 폭(Beam Width, $B$)을 지정하여, 매 순간 확률이 가장 높은 **최상위 $B$개의 후보군**을 동시에 유지하며 추적합니다. (예: $B=3$)
 
-## 3. 어텐션 메커니즘 (Attention Mechanism)
+1. **Step 1:** 첫 번째 단어로 올 확률이 높은 단어 3개를 뽑습니다. (예: `Jane`, `In`, `September`)
+2. **Step 2:** 뽑힌 3개의 단어 각각에 대해, 다음에 올 두 번째 단어의 확률들을 조합하여 계산합니다. ($P(y^{\langle 1 \rangle}, y^{\langle 2 \rangle} \vert{} x)$) 수만 개의 조합 중 **전체 확률이 가장 높은 상위 3개 조합**만 남기고 나머지는 가차 없이 버립니다. (예: `Jane visits`, `Jane visits l'`, `In September`)
+3. **Step 3~끝:** 문장 끝 토큰(`<EOS>`)이 나올 때까지 이 과정을 반복하여 최종적으로 가장 자연스러운 문장을 골라냅니다.
 
-기존 Seq2Seq는 아무리 긴 문장이라도 **단 하나의 고정 길이 벡터**로 압축해야 하므로 문장이 길어지면 정보 손실이 발생했습니다. 어텐션은 디코더가 단어를 생성할 때마다 **인코더의 어느 부분에 집중(Attention)해야 하는지** 유동적으로 계산합니다.
+### 길이 정규화 (Length Normalization)
 
-### **1) 어텐션 가중치 및 문맥 벡터 연산**
+빔 서치는 다음과 같이 누적 조건부 확률의 곱을 최대화하는 문장을 찾습니다.
 
-- 디코더 타임스텝 $t$에서 인코더 타임스텝 $t'$의 은닉 상태 $a^{\langle t' \rangle}$에 부여할 가중치를 $\alpha^{\langle t, t' \rangle}$라 합니다.
-    
-- **소프트맥스 가중치:**
-    
-    $$\alpha^{\langle t, t' \rangle} = \frac{\exp(e^{\langle t, t' \rangle})}{\sum_{t'=1}^{T_x} \exp(e^{\langle t, t' \rangle})}$$
-    
-    - $\sum_{t'} \alpha^{\langle t, t' \rangle} = 1$
-        
-- **문맥 벡터 (Context Vector):**
-    
-    $$c^{\langle t \rangle} = \sum_{t'=1}^{T_x} \alpha^{\langle t, t' \rangle} a^{\langle t' \rangle}$$
-    
 
-## 4. 트랜스포머의 등장 (Transformer Intuition)
+$$\arg\max \prod_{t=1}^{T_y} P(y^{\langle t \rangle} \vert{} x, y^{\langle 1 \rangle}, \dots, y^{\langle t-1 \rangle})$$
 
-어텐션 개념을 극대화하여 **RNN의 순차적 연산(Self-Loop)을 완전히 제거**하고, 오직 어텐션 연산만으로 시퀀스를 처리하는 Transformer (Self-Attention)의 직관적 개념을 언급합니다.
+확률값은 항상 0과 1 사이의 소수이므로, 단어가 많아지고 문장이 길어질수록 이 값들을 계속 곱하면 숫자가 너무 작아져서 컴퓨터가 계산하지 못하는 언더플로(Underflow)가 발생하며, **무조건 짧은 문장을 선호하는 오류**가 생깁니다.
 
-- **Self-Attention:** 문장 내부의 단어들이 서로 어떤 관계를 맺고 있는지 파악합니다 (예: "The **animal** didn't cross the street because **it** was too tired"에서 `it`이 `animal`을 가리킴을 파악).
-    
-- **Query, Key, Value ($Q, K, V$):**
-    
-    $$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$
-    
-- **병렬 처리 (Parallelization):** RNN처럼 시간 순서대로 기다릴 필요 없이 문장 전체를 한 번에 병렬 연산할 수 있어 학습 속도가 획기적으로 빨라집니다.
-    
+* **해결책:** 확률에 로그($\log$)를 씌워 곱셈을 덧셈 연산으로 바꾸고, 문장의 길이($T_y$)의 특정 제곱 값($\alpha$)으로 나누어 **길이에 대한 페널티를 줄여주는 정규화**를 수행합니다.
 
-## 5. 음성 인식 및 오디오 모델 (Speech Recognition & Audio)
+---
 
-### **1) 음성 인식 (Speech Recognition)**
+## 3. 빔 서치 디버깅: 오차 분석 (Error Analysis on Beam Search)
 
-음성 파형(Audio Waveform)이나 스펙트로그램(Spectrogram)을 입력받아 텍스트 시퀀스로 변환하는 과제입니다.
+번역 결과가 이상할 때, 이것이 **RNN(인코더-디코더)의 문제인지**, 아니면 **빔 서치 알고리즘의 문제(빔 폭 $B$가 너무 작음)인지** 구별하는 아주 명쾌한 디버깅 기법을 가르칩니다.
 
-- **CTC Loss (Connectionist Temporal Classification):**
-    
-    입력 타임스텝 수가 출력 텍스트 길이보다 훨씬 길 때 사용합니다 (예: `ttt-h-e---` $\rightarrow$ `the`).
-    
+정답 번역을 $y^*$, 모델이 빔 서치로 뽑아낸 엉터리 번역을 $\hat{y}$라고 할 때, 사전 학습된 RNN 모델에 두 문장을 각각 집어넣어 모델이 계산한 확률 값 $P(y^*\vert{}x)$와 $P(\hat{y}\vert{}x)$를 비교합니다.
 
-### **2) 트리거 워드 탐지 (Trigger Word Detection)**
+* **Case 1: $P(y^*\vert{}x) > P(\hat{y}\vert{}x)$**
+* **의미:** RNN은 인간이 만든 정답 문장에 더 높은 점수(확률)를 주며 제 일을 잘했습니다. 다만, 빔 서치가 탐색 도중 정답으로 가는 길을 놓치고 엉뚱한 $\hat{y}$를 최종 정답으로 물어온 것입니다.
+* **해결책:** 빔 서치의 문제이므로 **빔 폭($B$)을 더 키워야 합니다.**
 
-"Hey Siri", "OK Google"과 같은 특정 호출어를 감지하는 시스템입니다.
 
-- 오디오 음성 데이터에 호출어가 끝나는 지점 뒤의 몇몇 타임스텝에 라벨 $1$을 부여하여 RNN을 학습시킵니다.
-    
+* **Case 2: $P(y^*\vert{}x) \le P(\hat{y}\vert{}x)$**
+* **의미:** 빔 서치는 확률이 더 높은 문장을 제대로 찾아왔습니다. 하지만 신경망(RNN) 자체가 인간의 정답보다 이상한 번역문에 더 높은 점수를 주고 있는 상태입니다.
+* **해결책:** RNN 모델의 성능 문제이므로 **데이터를 더 모으거나, 네트워크 구조를 바꾸거나, 규제를 적용해야 합니다.**
 
+
+
+---
+
+## 4. BLEU 스코어 (Bilingual Evaluation Understudy)
+
+인간이 번역한 여러 개의 정답(References)이 있을 때, 인공지능이 만든 번역문(Machine Translation)이 얼마나 잘 되었는지 기계적으로 자동 평가하는 지표입니다.
+
+* **단순 정밀도(Precision)의 문제:** 인공지능이 `"the the the the the"`라고만 출력해도, 정답 문장에 `the`가 있으면 정밀도가 100%가 되는 버그가 생깁니다.
+* **보완된 n-gram 정밀도 (Modified n-gram Precision):** 단어(1-gram)나 두 단어 쌍(2-gram)이 생성된 문장에 등장했을 때, 정답 문장들 중에서 **가장 많이 등장한 최대 빈도수**를 상한선으로 두어 점수를 깎아버립니다.
+* **페널티 부여 (Brevity Penalty, BP):** 모델이 점수를 잘 받으려고 지나치게 짧은 문장(예: 단 한 단어만 정확하게 번역)만 출력하는 꼼수를 부리지 못하도록, 문장 길이가 너무 짧으면 감점을 주는 장치를 결합하여 최종 BLEU 점수를 도출합니다.
+
+---
+
+## 5. 어텐션 메커니즘 (Attention Mechanism)
+
+기존 인코더-디코더의 치명적인 한계는 "아무리 긴 문장이라도 무조건 고정된 크기(예: 128차원)의 콘텍스트 벡터 하나에 쑤셔 넣어야 한다"는 점이었습니다. 이 때문에 문장이 길어질수록 앞부분을 까먹어 번역 성능이 뚝 떨어졌습니다. 이를 구원한 것이 어텐션(Attention)입니다.
+
+### 핵심 아이디어
+
+디코더가 단어를 하나씩 생성할 때, 인코더가 압축한 하나의 벡터만 보는 게 아닙니다. 인코더의 모든 시점($t'$)의 숨겨진 기억(은닉 상태)들을 전부 다시 펼쳐놓고, 지금 번역하려는 단어와 가장 연관이 깊은 단어에 '집중(Attention)'하여 가중치를 다르게 주어 동적으로 정보를 가져옵니다.
+
+### 수학적 구조
+
+디코더의 현재 시점을 $t$, 인코더의 입력 시점을 $t'$라고 합시다.
+
+1. **어텐션 가중치 ($\alpha^{\langle t, t' \rangle}$):** 디코더의 직전 은닉 상태 $s^{\langle t-1 \rangle}$와 인코더의 모든 은닉 상태 $a^{\langle t' \rangle}$를 비교(작은 신경망 연산 혹은 내적)하여 점수 $e^{\langle t, t' \rangle}$를 매기고, 이를 Softmax 함수를 통과시켜 총합이 1이 되는 확률(가중치)로 만듭니다.
+2. **동적 콘텍스트 벡터 ($c^{\langle t \rangle}$):** 인코더의 은닉 상태들에 어텐션 가중치를 곱해 가중합(Weighted Sum)을 구합니다.
+
+$$c^{\langle t \rangle} = \sum_{t'} \alpha^{\langle t, t' \rangle} a^{\langle t' \rangle}$$
+
+
+3. 이 $c^{\langle t \rangle}$를 디코더의 현재 입력과 함께 섞어 단어를 예측합니다.
+
+* **효과:** 문장이 아무리 길어져도 인간이 긴 문장을 번역할 때 눈으로 특정 단어 주변을 훑어보며 번역하듯, 인공지능도 필요한 부분만 똑똑하게 집중해서 보기 때문에 긴 문장에서도 성능이 저하되지 않는 혁신을 이뤄냅니다.
+
+---
+
+## 6. 오디오 데이터와 음성 인식 (Speech Recognition)
+
+3주차의 마지막은 오디오 시퀀스 데이터를 처리하는 응용 기법을 다룹니다.
+
+* **오디오의 특징 추출:** 사람의 음성 파형(Raw audio)을 컴퓨터가 바로 처리하기는 어려우므로, 이를 주파수 성분으로 변환한 **스펙트로그램(Spectrogram)** 이미지 형태를 입력 특징으로 주로 사용합니다.
+* **CTC 손실 (Connectionist Temporal Classification):** 음성 인식은 입력 데이터(0.01초 단위의 수많은 오디오 프레임)의 길이에 비해 출력 데이터(글자 수)의 길이가 훨씬 짧습니다. CTC는 무수히 반복되어 출력되는 공백(Blank) 토큰과 중복 문자(예: `t-t-h-h-e` $\rightarrow$ `the`)를 무너뜨려(Collapse) 입력과 출력의 시점 길이가 달라도 완벽하게 매핑하여 학습할 수 있도록 손실 함수를 계산해 주는 기술입니다.
+
+---
+
+3주차는 번역기와 음성 인식기의 뼈대를 세우는 과정이며, 무엇보다 현대 인공지능 생태계를 뒤흔든 **트랜스포머(Transformer)와 GPT 등의 LLM 모델이 탄생할 수 있게 만든 절대적인 기술인 '어텐션(Attention)'의 동작 원리**를 깊이 있게 이해하는 가장 중요한 관문입니다!
