@@ -1,80 +1,98 @@
 
-이 주차는 **Deep Learning Specialization 전체 과정의 최신 최종장**으로, RNN과 Attention의 한계를 극복하고 현대 Large Language Model(ChatGPT, BERT 등)의 기반이 된 **Transformer 아키텍처**를 완전히 파헤칩니다.
+4주차는 이 코스의 최종장이자, 현재 생성형 AI 시대를 지배하고 있는 **트랜스포머(Transformer) 아키텍처**를 정면으로 다루는 가장 중요한 주차입니다. 기존 RNN 계열(LSTM, GRU)의 고질적인 문제였던 병렬 연산 불가능을 극복하고, 오직 어텐션(Attention)만으로 시퀀스를 처리하는 현대 자연어 처리(NLP)의 핵심 메커니즘을 배웁니다.
 
-## 1. Transformer가 등장한 이유
+---
 
-- **RNN / LSTM의 한계:** 문장을 순차적(Sequential)으로 처리하기 때문에 **병렬 연산(Parallelization)이 불가능**하여 학습 속도가 매우 느립니다.
-    
-- **Transformer의 혁신:** 반복문(Loop)을 없애고 Self-Attention과 위치 인코딩(Positional Encoding)을 도입하여 문장 전체를 한 번에 병렬 처리함으로써 대규모 데이터 학습을 가능하게 했습니다.
-    
+## 1. 트랜스포머(Transformer)의 등장 배경
 
-## 2. Self-Attention (자체 어텐션 메커니즘)
+### 기존 RNN / LSTM의 치명적인 한계: 순차적 연산(Sequential Processing)
 
-문장 내의 각 단어가 **자신의 문맥을 이해하기 위해 문장 내 다른 모든 단어와 어떤 관계를 갖는지** 스스로 계산하는 핵심 연산입니다.
+* RNN 계열 모델은 $t$번째 은닉 상태를 계산하기 위해 반드시 $t-1$번째 연산이 끝나기를 기다려야 합니다.
+* 이러한 **순차적 특성** 때문에 아무리 성능이 좋은 최신 GPU를 여러 대 동원하더라도 연산을 동시에 처리(병렬화, Parallelization)할 수 없으며, 대규모 데이터를 학습시키는 데 엄청난 시간이 걸립니다.
 
-### **1) Query(Q), Key(K), Value(V) 벡터**
+### 트랜스포머의 돌파구: "Attention Is All You Need"
 
-각 단어의 임베딩 벡터에 가중치 행렬 $W^Q, W^K, W^V$를 곱해 3가지 벡터를 생성합니다.
+* 트랜스포머는 RNN 구조를 완전히 제거했습니다.
+* 문장의 단어들을 한 장의 사진처럼 **동시에(Parallel) 입력**받아 한 번에 연산합니다. 단어 간의 순서와 관계는 오직 **어텐션(Attention)** 메커니즘과 **위치 인코딩**만으로 해결합니다.
 
-- **Query ($Q$):** "내가 찾고자 하는 정보/단어의 질문"
-    
-- **Key ($K$):** "각 단어가 가진 정체성/레이블"
-    
-- **Value ($V$):** "각 단어가 실제로 담고 있는 내용"
-    
+---
 
-### **2) Scaled Dot-Product Attention 수식**
+## 2. 셀프 어텐션 (Self-Attention)의 핵심 원리
+
+트랜스포머의 가장 핵심적인 엔진입니다. 문장 내의 단어들이 서로가 서로에게 얼마나 집중해야 하는지 스스로 계산합니다. 각 단어는 세 가지 벡터인 Query(질문), Key(주소), Value(값)로 변환됩니다.
+
+### 3가지 벡터의 비유 (Q, K, V)
+
+유튜브에서 동영상을 검색하는 과정에 비유할 수 있습니다.
+
+* **Query ($Q$):** 내가 검색창에 입력한 검색어 (현재 집중해서 보려는 단어)
+* **Key ($K$):** 유튜브에 영상들이 등록될 때 붙은 제목/태그 (문장 내의 모든 단어들)
+* **Value ($V$):** 실제 동영상 내용 (그 단어가 가진 진짜 의미적 정보)
+
+### 연산 과정 (Scaled Dot-Product Attention)
+
+1. **점수 계산:** 내 검색어($Q$)와 시스템 안의 모든 태그($K$)를 내적(Dot product)하여 얼마나 매칭되는지 점수를 냅니다. ($Q \cdot K^T$)
+2. **스케일링(Scaling):** 벡터의 차원 수($d_k$)가 커지면 내적 값도 너무 커져 Softmax의 기울기가 소실되므로, $\sqrt{d_k}$로 나누어 크기를 조절합니다.
+3. **확률화 (Softmax):** Softmax를 씌워 총합이 1이 되는 어텐션 가중치를 얻습니다.
+4. **가중합 (Weighted Sum):** 이 가중치를 실제 값($V$)에 곱해서 최종 출력을 냅니다.
 
 $$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$
 
-- **$QK^T$:** Query와 Key의 내적을 통해 단어 간의 유사도(관련성) 점수를 계산합니다.
-    
-- **$\sqrt{d_k}$로 나누는 이유 (Scaling):** 차원 수가 커질수록 내적값이 너무 커져 Softmax의 기울기가 소멸(Gradient Vanishing)하는 현상을 방지합니다.
-    
+---
 
-## 3. Multi-Head Attention (다중 헤드 어텐션)
+## 3. 멀티 헤드 어텐션 (Multi-Head Attention)
 
-단어 하나가 여러 가지 의미적 관계(예: 주어-동사 관계, 대명사-명사 관계, 시제 등)를 동시에 파악할 수 있도록 **Self-Attention 연산을 $h$개 병렬로 독립 수행**한 뒤 결과를 합칩니다.
+단 한 번만 어텐션을 계산(Single-Head)하면, 모델은 한 문장에서 단 하나의 관계성만 집중해서 보게 됩니다. 하지만 언어는 복잡하므로 여러 관점에서 문장을 해석해야 합니다.
 
-$$\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \dots, \text{head}_h)W^O$$
+* **원리:** $Q, K, V$를 계산하는 독립적인 어텐션 회로(Head)를 여러 개(예: 8개) 병렬로 둡니다.
+* **효과:** 예를 들어 1번 헤드는 "누가(주어) 무엇을(목적어) 했는지" 구조적 관계에 집중하고, 2번 헤드는 "언제, 어디서" 시공간적 맥락에 집중하며, 3번 헤드는 대명사(It, They)가 가리키는 실제 명사가 무엇인지 집중할 수 있게 됩니다.
+* 최종적으로 각각의 헤드가 뽑아낸 출력을 옆으로 이어 붙인 뒤(Concatenate) 선형 레이어를 통과시켜 최종 출력을 형성합니다.
 
-## 4. Positional Encoding (위치 인코딩)
+---
 
-Transformer는 RNN과 달리 단어를 한 번에 병렬로 입력받기 때문에 **단어의 순서(Order) 정보가 손실**됩니다. 이를 보완하기 위해 각 위치 $pos$에 고유한 주기 함수값을 더해줍니다.
+## 4. 트랜스포머의 핵심 구성 요소들
 
-- **삼각함수 기반 위치 인코딩:**
-    
-    $$PE_{(pos, 2i)} = \sin\left(\frac{pos}{10000^{2i/d_{\text{model}}}}\right)$$
-    
-    $$PE_{(pos, 2i+1)} = \cos\left(\frac{pos}{10000^{2i/d_{\text{model}}}}\right)$$
-    
-- **최종 입력:** $\text{Input Vector} = \text{Word Embedding} + \text{Positional Encoding}$
-    
+### ① 위치 인코딩 (Positional Encoding)
 
-## 5. Transformer 전체 구조 (Encoder & Decoder)
+RNN과 달리 문장의 모든 단어를 한 번에 집어넣기 때문에, 트랜스포머는 단어들의 **'순서(위치)' 정보**를 알지 못합니다. (단어 순서를 무작위로 섞어도 어텐션 결과가 똑같이 나오는 대참사가 발생합니다.)
 
-### **1) Encoder (인코더)**
+* **해결책:** 단어 임베딩 벡터에 단어의 절대적/상대적 위치에 따라 고유하게 변하는 사인(Sine) 및 코사인(Cosine) 함수 기반의 주기적인 값(위치 고유 벡터)을 직접 더해줍니다. 이를 통해 모델은 단어 고유의 의미뿐만 아니라, 이 단어가 문장의 앞쪽에 있는지 뒤쪽에 있는지 파악할 수 있게 됩니다.
 
-- **Multi-Head Self-Attention:** 문장 전체 내 단어 간 관계 파악.
-    
-- **Feed-Forward Network (FFN):** 각 위치별 신경망 연산.
-    
-- **Residual Connection (잔차 연결) & Layer Normalization:** 학습 안정화 및 기울기 소멸 방지.
-    
+### ② 잔차 연결 및 레이어 정규화 (Residuals & LayerNorm)
 
-### **2) Masking (마스킹 메커니즘)**
+* 레즈넷에서 배웠던 잔차 연결(Skip Connection)이 블록마다 적용되어 아주 깊은 층에서도 그래디언트가 부드럽게 흐르도록 돕습니다.
+* 배치 정규화(BatchNorm) 대신 각 샘플 내부의 피처들을 정규화하는 레이어 정규화(Layer Normalization)를 사용하여 학습의 안정성을 극대화합니다.
 
-- **Padding Mask:** 입력을 맞추기 위해 넣은 의미 없는 `<PAD>`(0) 토큰에 어텐션이 가지 않도록 가려줍니다.
-    
-- **Look-Ahead Mask (Causal Mask):** 디코더가 미래의 단어를 미리 보고 정답을 찌르는 것을 막기 위해, 현재 타임스텝 이후의 미래 단어 위치에 $-\infty$ (매우 작은 값)를 씌워 Softmax 확률을 0으로 만듭니다.
-    
+### ③ 마스크드 멀티 헤드 어텐션 (Masked Multi-Head Attention)
 
-### **3) Decoder (디코더)**
+* 디코더(Decoder) 파트에서 사용되는 특수한 어텐션입니다.
+* 학습 시 미래에 나올 단어까지 미리 보고 컨닝하여 번역하는 것을 막기 위해, 현재 시점보다 뒤에 있는 단어들의 Key 위치에 $-\infty$(마이너스 무한대)에 가까운 값을 강제로 주어 미래의 단어를 보지 못하게 차단(Masking)합니다.
 
-- **Masked Multi-Head Attention:** 미래 단어를 보지 못하도록 마스킹 처리된 Self-Attention.
-    
-- **Encoder-Decoder Attention:** 디코더의 $Q$와 인코더의 $K, V$를 결합하여 번역할 원본 문맥을 참조.
-    
-- **Linear & Softmax:** 최종 단어 분포 출력.
-    
+---
 
+## 5. 트랜스포머 인코더-디코더 전체 아키텍처
+
+트랜스포머는 최종적으로 다음과 같이 조립됩니다.
+
+### 인코더 (Encoder) 블록
+
+* 입력 단어들 + 위치 인코딩 $\rightarrow$ `Multi-Head Attention` $\rightarrow$ `Add & Norm` $\rightarrow$ `Feed Forward NN` $\rightarrow$ `Add & Norm`
+* 이 블록을 위로 여러 층(예: 6층) 쌓아 올립니다. 인코더의 최종 출력은 문장 전체의 고차원 맥락 정보가 담긴 $K$와 $V$ 벡터가 됩니다.
+
+### 디코더 (Decoder) 블록
+
+* 출력 단어들(Target) + 위치 인코딩 $\rightarrow$ `Masked Multi-Head Attention` (미래 컨닝 방지) $\rightarrow$ **`이동 다리 (Encoder-Decoder Attention)`** $\rightarrow$ `Feed Forward NN` $\rightarrow$ `Linear & Softmax`
+* **Encoder-Decoder Attention 층:** 디코더가 Query($Q$)를 던지면, 인코더가 최종적으로 출력했던 Key($K$)와 Value($V$)를 받아와 매칭시킵니다. "내가 지금 디코더에서 이 단어를 쓰려고 하는데, 인코더(원본 문장)의 어떤 단어들을 집중해서 봐야 하니?"를 연산하는 마법의 징검다리입니다.
+
+---
+
+## 6. 현대 LLM의 모태: BERT와 GPT 계열 비교 요약
+
+앤드류 응 교수는 트랜스포머 강의를 마무리하며 현대 거대 언어 모델들이 이 구조를 어떻게 변형하여 발전시켰는지 거시적인 시야를 제공합니다.
+
+* **BERT (Encoder-Only 구조):** 트랜스포머의 인코더 부분만 떼어내어 양방향 문맥을 모두 보게 만든 모델입니다. 문장 중간에 구멍을 뚫어놓고 맞추는 마스크 언어 모델(Masked LM) 방식으로 학습하며, 텍스트 분류, 개체명 인식 등 문장의 의미를 정밀하게 '이해'하는 태스크에 최적화되어 있습니다.
+* **GPT (Decoder-Only 구조):** 트랜스포머의 디코더 부분(Masked Attention)만 떼어내어, 철저하게 "이전 단어들을 보고 다음 단어가 무엇일지 예측"하는 인과적(Causal) 방식으로 학습합니다. 문장을 이어서 작성하는 '텍스트 생성' 및 현대 대화형 AI(ChatGPT 등)의 근간이 되었습니다.
+
+---
+
+4주차는 "순차적으로 흐르던 시간의 굴레(RNN)를 벗겨내고, 공간적인 행렬 연산(Attention)만으로 시퀀스를 완벽하게 지배하는 현대 AI의 정점"을 배우는 파트입니다.
