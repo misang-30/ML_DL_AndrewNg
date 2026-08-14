@@ -17,3 +17,8 @@
 - Week 2: Recommender systems(2시간 30분)
 - Week 3: Reinforcement learning(2시간)
 
+### 강의
+- https://www.deeplearning.ai/specializations/machine-learning?utm_campaign=mls-video-series&utm_medium=video&utm_source=youtube#course-slides
+
+### 강의 자료 
+- https://github.com/pmulard/machine-learning-specialization-andrew-ng/blob/main/notes/Recommender_Systems.pdf
