@@ -166,7 +166,7 @@ def function_2(x): # x는 넘파이 배열 가정
 	# 또는 return np.sum(x**2)
 	
 ```
-![](그림4-8.png)
+![](img/그림4-8.png)
 
 ``` python
 # x0=3, x1=4 일때 x0에 대한 편미분 구하라.
@@ -224,7 +224,7 @@ numerical_gradient(function_2, np.array([3.0, 0.0]))
 - 방향을 가진 벡터로 그려진다.
 - 이 그림을 보면 기울기는 함수의 가장 낮은 장소( 최솟값)을 가리키는 것 같다.
 - 정확히 말하자면 기울기가 가리키는 쪽은 각 장소에서 함수의 출력 값을 가장 줄이는 방향
-![](그림4-9.png)
+![](img/그림4-9.png)
 
 
 ### 3). 경사 하강법
@@ -265,13 +265,13 @@ gradient_descent(function_2, init_x=init_x, lr=0.1, step_num=100)
 # array([-6.111079e-10, 8.14814391e-10]) 0,0에 가까운 값을 구함.
 ```
 
-![](그림4-10.png)
+![](img/그림4-10.png)
 
 - 학습률이 너무 크면 발산하고, 너무 작으면 거의 갱신되지 않은 채 끝나버린다.
 
 ### 4). 신경망에서의 기울기
 - 아래 식을 가정.
-![](그라디언트.png)
+![](img/그라디언트.png)
 - 여기서 common/function.py, common/gradient.py 에서 정의한 함수를 사용한다.
 
 ``` python
@@ -523,7 +523,7 @@ plt.ylim(0, 9)
 plt.xlim(0, 10000)
 plt.show()
 ```
-![](그림4-11.png)
+![](img/그림4-11.png)
 
 ### 4). 시험 데이터로 평가하기
 
@@ -606,5 +606,5 @@ plt.xlim(0, 16)
 plt.legend(loc="lower right")
 plt.show()
 ```
-![](그림4-12.png)
+![](img/그림4-12.png)
 
